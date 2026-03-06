@@ -17,8 +17,7 @@ await page.getByRole('button', { name: 'Add to watchlist' }).describe('\'Add to 
 
 await test.step("Allow content to load, then click on one of the suggested AI questions, then scroll down to view and assert that the chatbot answered the question, and then click the 'Continue' button.", async () => {
 await agent.act(`Click on one of the suggested questions`, { page: page });
-await page.waitForTimeout(10000);
-await expect(page).aiAssert(`Assert that the chatbot answered the question`);
+await expect(page).aiAssert(`Assert that the chatbot answered the question`, { timeout: 30000 });
 await page.getByRole('button', { name: 'Continue' }).describe('\'Continue\' button').click();});
 
 await test.step("First, click the toggle switch for Daily market update, then click 'Cancel'.", async () => {
