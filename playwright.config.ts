@@ -19,6 +19,12 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: ['**/all-tests/**'],
+    },
+    {
+      name: 'all-tests',
+      testDir: './tests/all-tests',
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 });
