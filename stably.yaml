@@ -1,0 +1,6 @@
+version: 1
+
+# Test projects matching playwright.config.ts
+projects:
+  - chromium
+  - all-tests
