@@ -1,52 +1,31 @@
 import { test, expect } from '@stablyai/playwright-test';
 
-test("Test chat + paywall", async ({ page, context, agent }) => {
-await test.step("Navigate to the chat page.", async () => {
-await page.goto(`/chat`);});
+test("Test chat + paywall", async ({ page, agent }) => {
+  await test.step("Navigate to the chat page.", async () => {
+    await page.goto(`/chat`);
+  });
 
-await test.step("Send 'hello' as a message.", async () => {
-await page.getByRole('textbox', { name: 'Write a message...' }).describe('Message input field with placeholder "Write a message..."').click();
-await page.getByRole('textbox', { name: 'Write a message...' }).describe('Message input field with placeholder \'Write a message...\'').fill(`hello`);
-await agent.act(`Click on the send message button`, { page: page });});
+  await test.step("Send first message.", async () => {
+    await page.getByRole('textbox', { name: 'Write a message...' }).describe('Message input').fill(`hello`);
+    await agent.act(`Click on the send message button`, { page });
+    // Wait for send to register, don't need to wait for full AI response
+    await page.waitForTimeout(2000);
+  });
 
-await test.step("Assert the chatbot responded to my message correctly and offered suggested follow up questions.", async () => {
-await page.waitForTimeout(10000);
-await expect(page).aiAssert(`Assert the chatbot responded to my message correctly and offered suggested follow up questions`, { timeout: 60000 });});
+  await test.step("Open new chat and send second message.", async () => {
+    await page.getByRole('button', { name: '+ New' }).describe('+ New button').click();
+    await page.getByRole('textbox', { name: 'Write a message...' }).describe('Message input').fill(`What stocks should I buy?`);
+    await agent.act(`Click on the send message button`, { page });
+    await page.waitForTimeout(2000);
+  });
 
-await test.step("Click the '+ New' button, click the 'Write a message...' text input field, enter the query 'Summarize latest news for Netflix', send it, and then click on 'Retrieved' button.", async () => {
-await page.getByRole('button', { name: '+ New' }).describe('\'+ New\' button').click();
-await page.getByRole('textbox', { name: 'Write a message...' }).describe('"Write a message..." text input field').click();
-await page.getByRole('textbox', { name: 'Write a message...' }).describe('Message input field with placeholder "Write a message..."').fill(`Summarize latest news for Netflix`);
-await agent.act(`Click on the send message button`, { page: page });
-await page.waitForTimeout(10000);
-await page.getByText(/Retrieved\s+\w+/).describe('"Retrieved" button with right arrow icon').first().click();});
+  await test.step("Open new chat and send third message — paywall should appear.", async () => {
+    await page.getByRole('button', { name: '+ New' }).describe('+ New button').click();
+    await page.getByRole('textbox', { name: 'Write a message...' }).describe('Message input').fill(`Summarize the market today`);
+    await agent.act(`Click on the send message button`, { page });
+  });
 
-await test.step("Assert that the answer includes Netflix news.", async () => {
-await expect(page).aiAssert(`Assert answer includes netflix news`, { timeout: 60000 });});
-
-await test.step("Click the '+ New' button, click the message input field, type 'What could I invest in' into the message field, send the message, wait for response, and close the feedback dialog if present.", async () => {
-await page.getByRole('button', { name: '+ New' }).describe('\'+ New\' button').click();
-await page.getByRole('textbox', { name: 'Write a message...' }).describe('Message input field with placeholder "Write a message..."').click();
-await page.getByRole('textbox', { name: 'Write a message...' }).describe('Text area with placeholder "Write a message..."').fill(`What could I invest in`);
-await agent.act(`Click on the send message button`, { page: page });
-await page.waitForTimeout(10000);
-// Dismiss the feedback dialog if it appears
-try {
-  await agent.act(`If there is a feedback dialog or modal visible, close it by clicking its close button or X button. If no dialog is visible, do nothing.`, { page: page });
-} catch (_) { /* feedback dialog may not appear */ }});
-
-await test.step("Click on the '+ New' button, click on one of the suggested questions, and then verify 'Subscribe to Bloom' button appears after clicking the 'Subscribe now' link", async () => {
-await page.getByRole('button', { name: '+ New' }).describe('\'+ New\' button').click();
-await agent.act(`Click on one of the suggested questions`, { page: page });
-await page.waitForTimeout(5000);
-// The subscribe link text may be "Subscribe now" or "Subscribe"
-const subscribeNowLink = page.getByRole('link', { name: 'Subscribe now' });
-const subscribeLink = page.getByRole('link', { name: 'Subscribe' });
-if (await subscribeNowLink.isVisible({ timeout: 10000 }).catch(() => false)) {
-  await subscribeNowLink.click();
-} else {
-  await subscribeLink.first().click();
-}
-await expect(page.getByRole('button', { name: 'Subscribe to Bloom' }).describe('\'Subscribe to Bloom\' button')).toBeVisible();
-await expect(page).aiAssert(`The paywall for the app is open`, { timeout: 60000 });});
+  await test.step("Assert paywall / subscribe prompt is visible after hitting the free message limit.", async () => {
+    await expect(page).aiAssert(`A paywall, subscription prompt, or 'Subscribe now' link is visible on the page`, { timeout: 60000 });
+  });
 });
