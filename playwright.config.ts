@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@stablyai/playwright-test';
 
 export default defineConfig({
   testDir: './tests',
@@ -27,6 +27,14 @@ export default defineConfig({
       name: 'all-tests',
       testDir: './tests/all-tests',
       use: { ...devices['Desktop Chrome'] },
+      stably: {
+        notifications: {
+          slack: {
+            channelName: '#stably-ai',
+            notifyOnResult: 'all',
+          },
+        },
+      },
     },
   ],
 });
