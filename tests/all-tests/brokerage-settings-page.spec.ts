@@ -20,21 +20,11 @@ test("Brokerage Settings page loads and shows connection options or empty state"
   await test.step("Verify the Brokerage Settings page loads without errors", async () => {
     await page.waitForLoadState('networkidle');
 
-    // The page should render — either with brokerage connections or empty state
-    const bodyText = await page.locator('body').textContent();
-    expect(bodyText).toBeTruthy();
-
-    // Look for brokerage-related content or settings content
-    const hasContent = /brokerage|connect|linked|account|settings|broker/i.test(bodyText || '');
-    expect(hasContent).toBeTruthy();
-  });
-
-  await test.step("Verify the page is functional and renders properly", async () => {
-    await expect(page.locator('body')).toBeVisible();
-
-    // No error messages should be visible
-    const errorElement = page.locator('text=/error|something went wrong|crash/i').first();
-    const hasError = await errorElement.isVisible({ timeout: 2000 }).catch(() => false);
-    expect(hasError).toBeFalsy();
+    // Use aiAssert to verify the page shows brokerage settings, connection options,
+    // or an empty state prompting to connect a brokerage
+    await expect(page).aiAssert(
+      'A brokerage settings page, brokerage connection options, linked accounts, or an empty state prompting to connect a brokerage is visible. The page is not showing an error, crash, or blank white screen.',
+      { timeout: 60000 }
+    );
   });
 });
