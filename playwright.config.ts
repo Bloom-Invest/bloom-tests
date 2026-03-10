@@ -13,7 +13,7 @@ export default defineConfig({
     ['html', { open: 'never' }],
   ],
   use: {
-    baseURL: process.env.BASE_URL || 'https://app.getbloom.app',
+    baseURL: process.env.BASE_URL || 'https://bloom.onrender.com',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
