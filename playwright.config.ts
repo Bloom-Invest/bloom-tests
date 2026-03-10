@@ -22,6 +22,15 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       testIgnore: ['**/all-tests/**'],
+      stably: {
+        notifications: {
+          slack: {
+            channelName: 'stably-ai',
+            notifyOnStart: true,
+            notifyOnResult: 'all',
+          },
+        },
+      },
     },
     {
       name: 'all-tests',
