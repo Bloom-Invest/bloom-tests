@@ -32,6 +32,7 @@ export default defineConfig({
           slack: {
             channelName: '#stably-ai',
             notifyOnResult: 'all',
+            notifyOnStart: true,
           },
         },
       },
