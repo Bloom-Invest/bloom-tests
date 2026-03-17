@@ -1,8 +1,9 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { BASE_URL } from '../helpers/config.helper';
 
 test("Notifications page loads and displays notification history or empty state", async ({ page }) => {
   await test.step("Navigate to the Notifications page", async () => {
-    await page.goto('/notifications');
+    await page.goto(`${BASE_URL}/notifications`);
     const closeBtn = page.getByRole('button', { name: 'Close' });
     if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
       await closeBtn.click();

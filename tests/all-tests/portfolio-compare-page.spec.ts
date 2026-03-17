@@ -1,4 +1,5 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { BASE_URL } from '../helpers/config.helper';
 
 /**
  * User Prompt:
@@ -9,7 +10,7 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Portfolio compare page loads and shows comparison data", async ({ page }) => {
   await test.step("Navigate to the Portfolios page and dismiss any overlays", async () => {
-    await page.goto('/portfolios');
+    await page.goto(`${BASE_URL}/portfolios`);
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
@@ -19,18 +20,15 @@ test("Portfolio compare page loads and shows comparison data", async ({ page }) 
   });
 
   await test.step("Verify the Portfolios page loads", async () => {
-    await page.waitForLoadState('networkidle');
-
     // The page should show portfolio-related content
-    const bodyText = await page.locator('body').textContent();
-    const hasPortfolioContent = /portfolio|compare|performance|holdings|create/i.test(bodyText || '');
-    expect(hasPortfolioContent).toBeTruthy();
+    await expect(
+      page.getByText(/portfolio|compare|performance|holdings|create/i).first()
+    ).toBeVisible({ timeout: 15000 });
   });
 
   await test.step("Navigate to the portfolio compare page", async () => {
     // Try navigating directly to the compare page
-    await page.goto('/portfolios/compare');
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE_URL}/portfolios/compare`);
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
@@ -40,11 +38,10 @@ test("Portfolio compare page loads and shows comparison data", async ({ page }) 
   });
 
   await test.step("Verify the compare page loads with comparison data or empty state", async () => {
-    const bodyText = await page.locator('body').textContent();
-
     // Should have compare-related content or redirect to portfolios
-    const hasContent = /compare|performance|chart|portfolio|create|add/i.test(bodyText || '');
-    expect(hasContent).toBeTruthy();
+    await expect(
+      page.getByText(/compare|performance|chart|portfolio|create|add/i).first()
+    ).toBeVisible({ timeout: 15000 });
 
     // Page should be functional
     await expect(page.locator('body')).toBeVisible();

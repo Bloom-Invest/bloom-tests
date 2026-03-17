@@ -1,4 +1,5 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { BASE_URL } from '../helpers/config.helper';
 
 /**
  * User Prompt:
@@ -8,7 +9,7 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Markets page displays market data with stock prices and percentage changes", async ({ page }) => {
   await test.step("Navigate to the Markets page", async () => {
-    await page.goto('/markets');
+    await page.goto(`${BASE_URL}/markets`);
     // Close the subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
     if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {

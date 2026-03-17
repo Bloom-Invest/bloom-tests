@@ -1,9 +1,10 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { BASE_URL } from '../helpers/config.helper';
 
 test.afterAll(async ({ browser }) => {
   const page = await browser.newPage();
   try {
-    await page.goto('/portfolios');
+    await page.goto(`${BASE_URL}/portfolios`);
     const portfolioLink = page.getByText('tech stocks').first();
     if (await portfolioLink.isVisible({ timeout: 5000 }).catch(() => false)) {
       await portfolioLink.click();
@@ -19,7 +20,7 @@ test.afterAll(async ({ browser }) => {
 
 test("Assert portfolio features around add, edit, and delete work fine", async ({ page, context }) => {
 await test.step("Navigate to the Portfolios page.", async () => {
-await page.goto(`/portfolios`);});
+await page.goto(`${BASE_URL}/portfolios`);});
 
 await test.step("Create a portfolio", async () => {
 await page.getByRole('button', { name: 'Create your first portfolio' }).describe('\'Create your first portfolio\' button').click();});

@@ -1,4 +1,5 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { BASE_URL } from '../helpers/config.helper';
 
 /**
  * User Prompt:
@@ -9,7 +10,7 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Collection detail page shows stocks with price and percentage data", async ({ page }) => {
   await test.step("Navigate to the Collections page and dismiss any overlays", async () => {
-    await page.goto('/ideas/collections');
+    await page.goto(`${BASE_URL}/ideas/collections`);
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
@@ -19,11 +20,11 @@ test("Collection detail page shows stocks with price and percentage data", async
   });
 
   await test.step("Verify the Collections page loads with collection cards", async () => {
-    await page.waitForLoadState('networkidle');
-
-    // Look for collections-related content
-    const collectionsContent = page.locator('text=/collections|themes|categories/i').first();
-    await expect(collectionsContent).toBeVisible({ timeout: 10000 });
+    // Look for collection cards by finding clickable elements with collection names
+    const collectionCards = page.getByRole('button').or(page.getByRole('link')).filter({
+      hasText: /magnificent|ETF|AI|tech|growth|dividend|value|energy|healthcare/i
+    }).first();
+    await expect(collectionCards).toBeVisible({ timeout: 10000 });
   });
 
   await test.step("Click on a collection card to view details", async () => {
@@ -41,19 +42,13 @@ test("Collection detail page shows stocks with price and percentage data", async
       await firstCard.click();
     }
 
-    await page.waitForLoadState('networkidle');
   });
 
   await test.step("Verify the collection detail page shows stocks with relevant data", async () => {
-    // After clicking a collection, we should see individual stocks
-    // Look for stock tickers, prices, or percentage changes
-    const bodyText = await page.locator('body').textContent();
-
-    // Should have stock-related content
-    const hasStockData = /\$[\d,.]+|[+-]?\d+\.\d+%|\b[A-Z]{1,5}\b/i.test(bodyText || '');
-    expect(hasStockData).toBeTruthy();
-
-    // The page should not be in an error state
-    await expect(page.locator('body')).toBeVisible();
+    // After clicking a collection, verify stocks with price/percentage data are shown
+    await expect(page).aiAssert(
+      'The page shows a list of stocks or ETFs in a collection, with names and percentage change data visible.',
+      { timeout: 60000 }
+    );
   });
 });

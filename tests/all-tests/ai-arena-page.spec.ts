@@ -1,4 +1,5 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { BASE_URL } from '../helpers/config.helper';
 
 /**
  * User Prompt:
@@ -8,7 +9,7 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("AI Arena page displays AI portfolio managers and shows details on selection", async ({ page }) => {
   await test.step("Navigate to the AI Arena page and dismiss any overlays", async () => {
-    await page.goto('/ideas/ai-arena');
+    await page.goto(`${BASE_URL}/ideas/ai-arena`);
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
@@ -22,7 +23,7 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
         if (await tapOverlay.isVisible({ timeout: 2000 }).catch(() => false)) {
           await tapOverlay.click();
         }
-        await page.goto('/ideas/ai-arena');
+        await page.goto(`${BASE_URL}/ideas/ai-arena`);
       }
     } else if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await closeBtn.click();

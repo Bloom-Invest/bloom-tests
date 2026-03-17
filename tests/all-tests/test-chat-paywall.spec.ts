@@ -1,8 +1,9 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { BASE_URL } from '../helpers/config.helper';
 
 test("Test chat + paywall", async ({ page, agent }) => {
   await test.step("Navigate to the chat page.", async () => {
-    await page.goto(`/chat`);
+    await page.goto(`${BASE_URL}/chat`);
   });
 
   await test.step("Send first message.", async () => {

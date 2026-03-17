@@ -1,8 +1,9 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { BASE_URL } from '../helpers/config.helper';
 
 test("Verify Search and Collections", async ({ page, context, agent }) => {
 await test.step("Navigate to the search page.", async () => {
-await page.goto(`/search`);});
+await page.goto(`${BASE_URL}/search`);});
 
 await test.step("From the search page, interact with the 'Low Cost ETFs' section and return, then select the 'Magnificent 7' card. Verify the visibility of all seven associated companies (Alphabet, Microsoft, Meta Platforms, Apple, NVIDIA, Amazon, and Tesla), bookmark Alphabet stock, and unbookmark Microsoft stock. Return to the search page, search for 'AAPL', and bookmark 'AAPL Apple' from the search results. Finally, navigate to the 'AAPL Apple' stock details and interact with the stock price graph.", async () => {
 await page.waitForTimeout(3000);
