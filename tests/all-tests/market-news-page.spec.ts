@@ -9,29 +9,22 @@ import { test, expect } from '@stablyai/playwright-test';
 test("Market News page displays news articles and expands on click", async ({ page }) => {
   await test.step("Navigate to the Market News page", async () => {
     await page.goto('/ideas/news');
-
-    // Dismiss paywall if present so news content can load
-    const exploreFree = page.getByRole('button', { name: 'Explore free' });
-    if (await exploreFree.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await exploreFree.click();
-      await page.waitForTimeout(500);
-    }
-
+    await page.waitForLoadState('networkidle');
     await expect(page.getByRole('heading', { name: 'Market News', level: 1 })).toBeVisible({ timeout: 10000 });
   });
 
   await test.step("Verify at least one news article is visible", async () => {
-    // News articles are buttons with relative timestamps: "6h ago", "4d ago", "1w ago", "yesterday"
-    const newsArticles = page.locator('button').filter({ hasText: /\d+[hdmw] ago|yesterday/i });
+    // News articles are div[role="button"] elements containing a timestamp span
+    const newsArticles = page.locator('div[role="button"]').filter({ hasText: /\d+[hdmw] ago|yesterday/i });
     await expect(newsArticles.first()).toBeVisible({ timeout: 10000 });
   });
 
-  await test.step("Click on a news article and verify it is interactive", async () => {
-    const firstArticle = page.locator('button').filter({ hasText: /\d+[hdmw] ago|yesterday/i }).first();
+  await test.step("Click on a news article and verify it opens", async () => {
+    const firstArticle = page.locator('div[role="button"]').filter({ hasText: /\d+[hdmw] ago|yesterday/i }).first();
     const articleText = await firstArticle.textContent();
-    await firstArticle.click();
-    await page.waitForTimeout(500);
-    await expect(page.locator('body')).toBeVisible();
     expect(articleText?.length).toBeGreaterThan(10);
+    await firstArticle.click();
+    // Clicking a news article navigates to chat with article context
+    await expect(page).toHaveURL(/\/chat/, { timeout: 10000 });
   });
 });
