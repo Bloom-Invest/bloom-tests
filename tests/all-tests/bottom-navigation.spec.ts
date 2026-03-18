@@ -35,8 +35,8 @@ test("Bottom navigation routes to correct pages", async ({ page }) => {
     await expect(page.getByRole('textbox').describe('Chat input')).toBeVisible({ timeout: 10000 });
   });
 
-  await test.step("Tap Settings tab and verify navigation", async () => {
-    await page.locator('a').filter({ hasText: /^Settings$/ }).describe('Settings nav tab').click();
+  await test.step("Tap Settings/More tab and verify navigation", async () => {
+    await page.locator('a').filter({ hasText: /^(Settings|More)$/ }).describe('Settings/More nav tab').click();
     await page.waitForTimeout(1000);
     await expect(page).toHaveURL(/\/more/);
   });

@@ -5,7 +5,7 @@ import { test, expect } from '@stablyai/playwright-test';
  * Verify ETF and individual stock pages render appropriate sections.
  */
 test("Different asset types render correctly on symbol pages", async ({ page }) => {
-  await test.step("Verify ETF page loads correctly (QQQ)", async () => {
+  await test.step("Verify ETF page loads correctly with Bottom Line (QQQ)", async () => {
     await page.goto('/symbol/QQQ');
     await page.waitForLoadState('networkidle');
 
@@ -18,9 +18,12 @@ test("Different asset types render correctly on symbol pages", async ({ page }) 
       'The ETF detail page shows fund-specific metrics such as AUM (assets under management), expense ratio, return data, or risk metrics.',
       { timeout: 60000 }
     );
+
+    // Bottom Line section on ETF
+    await expect(page.locator('text=/Bottom Line/i').first().describe('QQQ Bottom Line')).toBeVisible({ timeout: 10000 });
   });
 
-  await test.step("Verify individual stock page has different sections (AAPL)", async () => {
+  await test.step("Verify individual stock page with Bottom Line (AAPL)", async () => {
     await page.goto('/symbol/AAPL');
     await page.waitForLoadState('networkidle');
 
@@ -33,9 +36,8 @@ test("Different asset types render correctly on symbol pages", async ({ page }) 
       'The stock detail page shows company-specific financial metrics such as profit margins, revenue growth, cashflow, or earnings data.',
       { timeout: 60000 }
     );
-  });
 
-  await test.step("Both asset types have Bottom Line section", async () => {
-    await expect(page.locator('text=/Bottom Line/i').first().describe('Bottom Line section')).toBeVisible({ timeout: 10000 });
+    // Bottom Line section on stock
+    await expect(page.locator('text=/Bottom Line/i').first().describe('AAPL Bottom Line')).toBeVisible({ timeout: 10000 });
   });
 });
