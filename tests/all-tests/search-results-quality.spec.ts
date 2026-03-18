@@ -8,7 +8,6 @@ test("Search returns relevant results for ticker and company name queries", asyn
   await test.step("Navigate to search page", async () => {
     await page.goto('/search');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
 
     // Dismiss paywall if present
     const exploreFree = page.getByRole('button', { name: 'Explore free' }).describe('Explore free button');

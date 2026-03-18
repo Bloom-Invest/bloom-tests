@@ -8,7 +8,6 @@ test("Paywall appears and Explore free grants access to content", async ({ page 
   await test.step("Navigate to a page that shows the paywall", async () => {
     await page.goto('/markets');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
   });
 
   await test.step("Verify paywall overlay is displayed", async () => {

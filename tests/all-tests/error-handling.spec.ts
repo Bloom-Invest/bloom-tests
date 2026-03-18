@@ -8,7 +8,6 @@ test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
   await test.step("Invalid symbol shows error message", async () => {
     await page.goto('/symbol/ZZZZZ');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
 
     await expect(page.locator('text=/ZZZZZ/').first().describe('Invalid ticker')).toBeVisible({ timeout: 10000 });
 

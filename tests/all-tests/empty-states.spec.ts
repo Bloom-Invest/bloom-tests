@@ -25,7 +25,6 @@ test("Empty states display appropriate messages", async ({ page }) => {
   await test.step("Verify notifications page handles empty state", async () => {
     await page.goto('/notifications');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
 
     // Use aiAssert — notifications page may show items or an empty/info state
     await expect(page).aiAssert(
