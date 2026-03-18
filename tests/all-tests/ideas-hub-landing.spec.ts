@@ -30,13 +30,12 @@ test("Ideas hub shows trades, AI portfolios, and collections", async ({ page }) 
 
   await test.step("Verify navigation to collections sub-page works", async () => {
     const seeAllCollections = page.locator('a, button, [role="button"]').filter({ hasText: /see all collections/i }).first().describe('See all collections link');
-    if (await seeAllCollections.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await seeAllCollections.click();
-      await page.waitForTimeout(1000);
-      await expect(page).aiAssert(
-        'The page shows a list of investment collections or strategies with names like Low Cost ETFs, Magnificent 7, or similar.',
-        { timeout: 60000 }
-      );
-    }
+    await expect(seeAllCollections).toBeVisible({ timeout: 10000 });
+    await seeAllCollections.click();
+    await page.waitForTimeout(1000);
+    await expect(page).aiAssert(
+      'The page shows a list of investment collections or strategies with names like Low Cost ETFs, Magnificent 7, or similar.',
+      { timeout: 60000 }
+    );
   });
 });

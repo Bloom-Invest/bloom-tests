@@ -19,11 +19,10 @@ test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
 
   await test.step("App still navigable after error", async () => {
     const navLink = page.locator('a').filter({ hasText: /^Markets$/ }).describe('Markets nav link');
-    if (await navLink.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await navLink.click();
-      await page.waitForTimeout(1000);
-      await expect(page).toHaveURL(/\/markets/);
-    }
+    await expect(navLink).toBeVisible({ timeout: 10000 });
+    await navLink.click();
+    await page.waitForTimeout(1000);
+    await expect(page).toHaveURL(/\/markets/);
   });
 
   await test.step("Non-existent route does not crash the app", async () => {
