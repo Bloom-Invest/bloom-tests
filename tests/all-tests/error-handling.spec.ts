@@ -13,7 +13,7 @@ test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
 
     await expect(page).aiAssert(
       'The page shows an error state for the invalid symbol ZZZZZ, such as "Problem fetching data", "Not found", "Try again", or similar error messaging.',
-      { timeout: 60000 }
+      { timeout: 60000, fullPage: true }
     );
   });
 
@@ -34,7 +34,7 @@ test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
     await expect(page.locator('body')).toBeVisible();
     await expect(page).aiAssert(
       'The page either redirected to a valid page or shows a meaningful error/404 page. It is not blank or crashed.',
-      { timeout: 60000 }
+      { timeout: 60000, fullPage: true }
     );
   });
 });

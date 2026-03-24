@@ -21,7 +21,7 @@ test("Symbol page shows Bottom Line, news, and collection associations", async (
 
     await expect(page).aiAssert(
       'The Bottom Line section shows financial health indicators like profit, growth, price, or activity with colored indicators (green, orange, or red).',
-      { timeout: 60000 }
+      { timeout: 60000, fullPage: true }
     );
   });
 
@@ -35,7 +35,7 @@ test("Symbol page shows Bottom Line, news, and collection associations", async (
 
     await expect(page).aiAssert(
       'After scrolling, the page shows additional content such as related industry peers, key events/news, or collection associations for the stock.',
-      { timeout: 60000 }
+      { timeout: 60000, fullPage: true }
     );
   });
 });

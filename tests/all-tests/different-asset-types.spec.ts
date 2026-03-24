@@ -13,10 +13,10 @@ test("Different asset types render correctly on symbol pages", async ({ page }) 
     await expect(page.locator('text=/Nasdaq 100 ETF/i').first().describe('ETF name')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=/\\$[\\d,.]+/').first().describe('ETF price')).toBeVisible({ timeout: 5000 });
 
-    // ETFs show specific metrics
+    // ETFs show specific metrics (fullPage to capture below-the-fold content)
     await expect(page).aiAssert(
       'The ETF detail page shows fund-specific metrics such as AUM (assets under management), expense ratio, return data, or risk metrics.',
-      { timeout: 60000 }
+      { timeout: 60000, fullPage: true }
     );
 
     // Bottom Line section on ETF
@@ -31,10 +31,10 @@ test("Different asset types render correctly on symbol pages", async ({ page }) 
     await expect(page.locator('text=/Apple/i').first().describe('Company name')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=/\\$[\\d,.]+/').first().describe('Stock price')).toBeVisible({ timeout: 5000 });
 
-    // Individual stocks show company-specific metrics
+    // Individual stocks show company-specific metrics (fullPage to capture below-the-fold content)
     await expect(page).aiAssert(
       'The stock detail page shows company-specific financial metrics such as profit margins, revenue growth, cashflow, or earnings data.',
-      { timeout: 60000 }
+      { timeout: 60000, fullPage: true }
     );
 
     // Bottom Line section on stock
