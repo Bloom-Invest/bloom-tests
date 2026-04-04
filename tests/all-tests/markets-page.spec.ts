@@ -9,11 +9,25 @@ import { test, expect } from '@stablyai/playwright-test';
 test("Markets page displays market data with stock prices and percentage changes", async ({ page }) => {
   await test.step("Navigate to the Markets page", async () => {
     await page.goto('/markets');
-    // Close the subscription overlay if it appears
+
+    // Handle subscription overlay if it appears
+    const exploreBtn = page.getByRole('button', { name: 'Explore free' });
     const closeBtn = page.getByRole('button', { name: 'Close' });
-    if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await exploreBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await exploreBtn.click();
+      // If redirected away, navigate back
+      if (!page.url().includes('/markets')) {
+        // Dismiss any tutorial overlay
+        const tapOverlay = page.getByText('Tap anywhere to continue');
+        if (await tapOverlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+          await tapOverlay.click();
+        }
+        await page.goto('/markets');
+      }
+    } else if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await closeBtn.click();
     }
+
     // Dismiss notification CTA if present
     const dismissBtn = page.getByRole('button', { name: 'Dismiss notification CTA' });
     if (await dismissBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -66,9 +80,9 @@ test("Markets page displays market data with stock prices and percentage changes
     await timePeriodGroup.scrollIntoViewIfNeeded();
     await expect(timePeriodGroup).toBeVisible();
 
-    // Verify time period buttons exist (1D, 1W, 1M, etc.)
-    await expect(page.getByText('1D').first()).toBeVisible();
-    await expect(page.getByText('1W').first()).toBeVisible();
-    await expect(page.getByText('1M').first()).toBeVisible();
+    // Verify time period options exist (1D, 1W, 1M, etc.)
+    await expect(timePeriodGroup.getByText('1D')).toBeVisible();
+    await expect(timePeriodGroup.getByText('1W')).toBeVisible();
+    await expect(timePeriodGroup.getByText('1M')).toBeVisible();
   });
 });
