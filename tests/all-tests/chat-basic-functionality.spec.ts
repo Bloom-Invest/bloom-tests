@@ -29,6 +29,17 @@ test("Chat page allows sending messages and receiving AI responses", async ({ pa
       await firstSuggestion.click();
     }
 
+    // Wait for the AI to finish processing before asserting on response content.
+    // The chat shows a "processing..." indicator while generating; wait for it to appear
+    // then disappear, so we know the response is fully rendered.
+    const processingIndicator = page.getByText('processing...', { exact: false });
+    // First, wait briefly for the processing indicator to appear (it may already be visible)
+    await processingIndicator.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {
+      // It's possible the response was fast enough that processing already finished
+    });
+    // Now wait for processing to finish (disappear) with a generous timeout
+    await processingIndicator.waitFor({ state: 'hidden', timeout: 180000 });
+
     // Use aiAssert to verify the AI actually responded with meaningful content
     await expect(page).aiAssert(
       'The chat shows an AI-generated response with investing-related content (not just the original question or loading state).',
