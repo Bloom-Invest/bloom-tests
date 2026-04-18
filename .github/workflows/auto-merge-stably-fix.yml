@@ -1,0 +1,35 @@
+name: Auto-merge Stably autofix PRs
+
+# Squash-merges PRs from stably autofix branches once they pass all required checks
+# and have no review-requested-changes. Manually opened PRs that happen to come from
+# a stably-autofix branch are still subject to all branch-protection rules.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  check_suite:
+    types: [completed]
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      (
+        startsWith(github.event.pull_request.head.ref, 'fix/stably-autofix-') ||
+        startsWith(github.event.pull_request.head.ref, 'stably/autofix/') ||
+        startsWith(github.event.pull_request.head.ref, 'stably-session-')
+      )
+    steps:
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash --delete-branch "$PR_URL"
