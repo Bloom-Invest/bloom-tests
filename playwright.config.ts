@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@stablyai/playwright-test';
 
 export default defineConfig({
   testDir: './tests',
+  // Wake bloom.onrender.com once per suite so the inevitable cold-start cost
+  // doesn't get billed to a random test (notifications-page got hit on
+  // Apr 18 with net::ERR_CONNECTION_CLOSED).
+  globalSetup: require.resolve('./playwright.global-setup.ts'),
   timeout: 300000,
   expect: { timeout: 60000 },
   fullyParallel: true,
