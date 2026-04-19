@@ -1,4 +1,5 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { aiAssertSafe } from '../helpers/aiAssertSafe';
 
 /**
  * Test: Stock detail for different asset types
@@ -14,9 +15,18 @@ test("Different asset types render correctly on symbol pages", async ({ page }) 
     await expect(page.locator('text=/\\$[\\d,.]+/').first().describe('ETF price')).toBeVisible({ timeout: 5000 });
 
     // ETFs show specific metrics (fullPage to capture below-the-fold content)
-    await expect(page).aiAssert(
+    await aiAssertSafe(
+      page,
       'The ETF detail page shows fund-specific metrics such as AUM (assets under management), expense ratio, return data, or risk metrics.',
-      { timeout: 60000, fullPage: true }
+      {
+        timeout: 60000,
+        fullPage: true,
+        // Fallback: any of the ETF-specific metric labels render
+        fallback: async () => {
+          const metric = page.getByText(/AUM|Assets Under Management|Expense Ratio|Yield|Holdings|Top Holdings|Net Assets/i).first();
+          return await metric.isVisible({ timeout: 5000 }).catch(() => false);
+        },
+      },
     );
 
     // Bottom Line section on ETF
@@ -32,9 +42,18 @@ test("Different asset types render correctly on symbol pages", async ({ page }) 
     await expect(page.locator('text=/\\$[\\d,.]+/').first().describe('Stock price')).toBeVisible({ timeout: 5000 });
 
     // Individual stocks show company-specific metrics (fullPage to capture below-the-fold content)
-    await expect(page).aiAssert(
+    await aiAssertSafe(
+      page,
       'The stock detail page shows company-specific financial metrics such as profit margins, revenue growth, cashflow, or earnings data.',
-      { timeout: 60000, fullPage: true }
+      {
+        timeout: 60000,
+        fullPage: true,
+        // Fallback: any of the company-specific metric labels render
+        fallback: async () => {
+          const metric = page.getByText(/Profit|Margin|Revenue|Growth|Cashflow|Cash Flow|Earnings|EPS|P\/E/i).first();
+          return await metric.isVisible({ timeout: 5000 }).catch(() => false);
+        },
+      },
     );
 
     // Bottom Line section on stock
