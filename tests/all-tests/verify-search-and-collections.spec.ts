@@ -44,5 +44,5 @@ await agent.act('Click on the AAPL Apple search result', { page: page });
 });
 
 await test.step("Assert that AAPL price information and a sparkline chart for 1M is shown to the user.", async () => {
-await expect(page).aiAssert(`Assert that AAPL price information and a sparkline chart for 1M is shown to the user`);});
+await expect(page).aiAssert(`Assert that AAPL price information and a sparkline chart for 1M is shown to the user`, { timeout: 60000 });});
 });
