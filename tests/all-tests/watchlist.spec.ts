@@ -32,10 +32,11 @@ test("Watchlist displays stocks and supports adding via bookmark", async ({ page
     await expect(page.locator('text=/Apple/i').first().describe('Apple company name')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=/\\$[\\d,.]+/').first().describe('Stock price')).toBeVisible({ timeout: 10000 });
 
-    // Use aiAssert to verify bookmark/watchlist affordance exists (icon-only, hard to select deterministically)
-    await expect(page).aiAssert(
-      'The stock detail page for AAPL shows a bookmark icon, add-to-watchlist button, or save button somewhere on the page.',
-      { timeout: 60000 }
-    );
+    // Wait for the header bookmark button to render (it depends on an API call
+    // for the investment's category and name, so it can lag behind the rest of
+    // the page). Look for a <button> in the header that contains a bookmark SVG.
+    await expect(
+      page.locator('header button').filter({ has: page.locator('svg') }).first().describe('Header bookmark button')
+    ).toBeVisible({ timeout: 15000 });
   });
 });
