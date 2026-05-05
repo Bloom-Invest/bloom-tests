@@ -5,7 +5,7 @@ await test.step("Navigate to the search page.", async () => {
 await page.goto(`/search`);});
 
 await test.step("From the search page, interact with the 'Low Cost ETFs' section and return, then select the 'Magnificent 7' card. Verify the Magnificent 7 stocks are listed, interact with bookmarks, return to search, search for 'AAPL', and navigate to the stock details.", async () => {
-await page.waitForTimeout(3000);
+await page.waitForLoadState('networkidle');
 await page.evaluate(({ deltaX, deltaY }) => {
   window.scrollBy(deltaX, deltaY);
 }, { deltaX: 0, deltaY: 10 });
@@ -15,7 +15,6 @@ await page.getByRole('link', { name: 'Magnificent' }).describe('Magnificent 7 ca
 
 // Wait for the collection to load
 await page.waitForLoadState('networkidle');
-await page.waitForTimeout(2000);
 
 // Verify the Magnificent 7 collection loaded with stocks using AI assertion
 // (company names may not render as text if the API returns empty name fields,
