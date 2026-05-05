@@ -36,7 +36,7 @@ await page.getByRole('button').first().describe('Back button with left arrow ico
 await page.getByRole('link', { name: 'Ideas' }).describe('Ideas link').click();
 await page.getByPlaceholder('Search stocks').describe('Search stocks input field').click();
 await page.getByPlaceholder('Search stocks').describe('"Search stocks" input field with magnifying glass icon').fill(`aapl`);
-await page.waitForTimeout(2000);
+await page.waitForLoadState('networkidle');
 
 // Click on AAPL in the search results
 await agent.act('Click on the AAPL Apple search result', { page: page });
