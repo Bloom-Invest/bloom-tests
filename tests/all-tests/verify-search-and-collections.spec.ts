@@ -1,5 +1,29 @@
 import { test, expect } from '@stablyai/playwright-test';
 
+test.afterAll(async ({ browser }) => {
+  const page = await browser.newPage();
+  try {
+    await page.goto('/search');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('link', { name: 'Magnificent' }).click();
+    await page.waitForLoadState('networkidle');
+    // Unbookmark GOOGL if bookmarked
+    const googlRow = page.getByRole('row', { name: /GOOGL/ });
+    if (await googlRow.isVisible()) {
+      await googlRow.getByRole('button').click();
+    }
+    // Unbookmark MSFT if bookmarked
+    const msftRow = page.getByRole('row', { name: /MSFT/ });
+    if (await msftRow.isVisible()) {
+      await msftRow.getByRole('button').click();
+    }
+  } catch {
+    // Collection page not reachable or items not found — nothing to do
+  } finally {
+    await page.close();
+  }
+});
+
 test("Verify Search and Collections", async ({ page, context, agent }) => {
 await test.step("Navigate to the search page.", async () => {
 await page.goto(`/search`);});

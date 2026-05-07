@@ -28,17 +28,16 @@ await test.step("Name it 'tech stocks', and then use the stock search functional
 // Dismiss the feedback modal if it appears, as it can overlay the form inputs
 try {
   const feedbackHeading = page.getByRole('heading', { name: /Bloom experience/i });
-  if (await feedbackHeading.isVisible({ timeout: 3000 })) {
-    await page.keyboard.press('Escape');
-    // If Escape didn't close it, try clicking the close (X) button
-    if (await feedbackHeading.isVisible({ timeout: 1000 })) {
-      // The X button is a button containing only an img, adjacent to the heading
-      await feedbackHeading.locator('..').locator('button').first().click({ force: true });
-    }
+  await feedbackHeading.waitFor({ state: 'visible', timeout: 3000 });
+  await page.keyboard.press('Escape');
+  try {
+    await feedbackHeading.waitFor({ state: 'hidden', timeout: 1000 });
+  } catch {
+    await feedbackHeading.locator('..').locator('button').first().click({ force: true });
     await feedbackHeading.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
   }
 } catch {
-  // Modal not present or already dismissed — nothing to do
+  // Modal not present — nothing to do
 }
 await page.getByPlaceholder('e.g. tech stocks').describe('Input field with placeholder \'e.g. tech stocks\'').click();
 await page.getByPlaceholder('e.g. tech stocks').describe('Input field with placeholder \'e.g. tech stocks\'').fill(`tech stocks`);
