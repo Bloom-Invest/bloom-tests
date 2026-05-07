@@ -10,12 +10,12 @@ test.afterAll(async ({ browser }) => {
     // Unbookmark GOOGL if bookmarked
     const googlRow = page.getByRole('row', { name: /GOOGL/ });
     if (await googlRow.isVisible()) {
-      await googlRow.getByRole('button').click();
+      await googlRow.getByRole('button').first().click();
     }
     // Unbookmark MSFT if bookmarked
     const msftRow = page.getByRole('row', { name: /MSFT/ });
     if (await msftRow.isVisible()) {
-      await msftRow.getByRole('button').click();
+      await msftRow.getByRole('button').first().click();
     }
   } catch {
     // Collection page not reachable or items not found — nothing to do
@@ -50,8 +50,8 @@ await expect(page.getByRole('link', { name: /AMZN/ }).describe('AMZN stock link'
 await expect(page.getByRole('link', { name: /TSLA/ }).describe('TSLA stock link')).toBeVisible();
 
 // Interact with bookmarks
-await page.getByRole('row', { name: /GOOGL/ }).getByRole('button').describe('Bookmark button for GOOGL stock').click();
-await page.getByRole('row', { name: /MSFT/ }).getByRole('button').describe('Bookmark button for MSFT stock').click();
+await page.getByRole('row', { name: /GOOGL/ }).getByRole('button').first().describe('Bookmark button for GOOGL stock').click();
+await page.getByRole('row', { name: /MSFT/ }).getByRole('button').first().describe('Bookmark button for MSFT stock').click();
 
 // Go back and search for AAPL
 await page.getByRole('button').first().describe('Back button with left arrow icon').click({"timeout":9000});
