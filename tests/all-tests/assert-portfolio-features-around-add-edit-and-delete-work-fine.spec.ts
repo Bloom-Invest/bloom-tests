@@ -25,6 +25,20 @@ await test.step("Create a portfolio", async () => {
 await page.getByRole('button', { name: 'Create your first portfolio' }).describe('\'Create your first portfolio\' button').click();});
 
 await test.step("Name it 'tech stocks', and then use the stock search functionality to add 'Apple Inc.' (AAPL) and 'Microsoft' (MSFT) to the portfolio, verifying both are selected in the investments, until the portfolio is created.", async () => {
+// Dismiss the feedback modal if it appears, as it can overlay the form inputs
+try {
+  const feedbackHeading = page.getByRole('heading', { name: /Bloom experience/i });
+  await feedbackHeading.waitFor({ state: 'visible', timeout: 3000 });
+  await page.keyboard.press('Escape');
+  try {
+    await feedbackHeading.waitFor({ state: 'hidden', timeout: 1000 });
+  } catch {
+    await feedbackHeading.locator('..').locator('button').first().click({ force: true });
+    await feedbackHeading.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
+  }
+} catch {
+  // Modal not present — nothing to do
+}
 await page.getByPlaceholder('e.g. tech stocks').describe('Input field with placeholder \'e.g. tech stocks\'').click();
 await page.getByPlaceholder('e.g. tech stocks').describe('Input field with placeholder \'e.g. tech stocks\'').fill(`tech stocks`);
 await page.getByRole('button', { name: 'Continue' }).describe('Green \'Continue\' button').click();

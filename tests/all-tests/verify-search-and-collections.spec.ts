@@ -1,5 +1,29 @@
 import { test, expect } from '@stablyai/playwright-test';
 
+test.afterAll(async ({ browser }) => {
+  const page = await browser.newPage();
+  try {
+    await page.goto('/search');
+    await page.waitForLoadState('networkidle');
+    await page.getByRole('link', { name: 'Magnificent' }).click();
+    await page.waitForLoadState('networkidle');
+    // Unbookmark GOOGL if bookmarked
+    const googlRow = page.getByRole('row', { name: /GOOGL/ });
+    if (await googlRow.isVisible()) {
+      await googlRow.getByRole('button').first().click();
+    }
+    // Unbookmark MSFT if bookmarked
+    const msftRow = page.getByRole('row', { name: /MSFT/ });
+    if (await msftRow.isVisible()) {
+      await msftRow.getByRole('button').first().click();
+    }
+  } catch {
+    // Collection page not reachable or items not found — nothing to do
+  } finally {
+    await page.close();
+  }
+});
+
 test("Verify Search and Collections", async ({ page, context, agent }) => {
 await test.step("Navigate to the search page.", async () => {
 await page.goto(`/search`);});
@@ -16,20 +40,18 @@ await page.getByRole('link', { name: 'Magnificent' }).describe('Magnificent 7 ca
 // Wait for the collection to load
 await page.waitForLoadState('networkidle');
 
-// Verify the Magnificent 7 collection loaded with stocks using AI assertion
-// (company names may not render as text if the API returns empty name fields,
-// but logos and ticker symbols should be visible)
-await expect(page).aiAssert(
-  'The Magnificent 7 collection page is showing a list of stocks with their logos and performance data (percentage changes). There should be around 7 items visible.',
-  { timeout: 60000 }
-);
+// Verify all 7 stocks are visible by ticker symbol
+await expect(page.getByRole('link', { name: /GOOGL/ }).describe('GOOGL stock link')).toBeVisible();
+await expect(page.getByRole('link', { name: /MSFT/ }).describe('MSFT stock link')).toBeVisible();
+await expect(page.getByRole('link', { name: /META/ }).describe('META stock link')).toBeVisible();
+await expect(page.getByRole('link', { name: /AAPL/ }).describe('AAPL stock link')).toBeVisible();
+await expect(page.getByRole('link', { name: /NVDA/ }).describe('NVDA stock link')).toBeVisible();
+await expect(page.getByRole('link', { name: /AMZN/ }).describe('AMZN stock link')).toBeVisible();
+await expect(page.getByRole('link', { name: /TSLA/ }).describe('TSLA stock link')).toBeVisible();
 
-// Try to interact with the first bookmark button in the list (+ button)
-const firstBookmarkButton = page.locator('table button, [role="row"] button').first();
-if (await firstBookmarkButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-  await firstBookmarkButton.click();
-  await page.waitForTimeout(500);
-}
+// Interact with bookmarks
+await page.getByRole('row', { name: /GOOGL/ }).getByRole('button').first().describe('Bookmark button for GOOGL stock').click();
+await page.getByRole('row', { name: /MSFT/ }).getByRole('button').first().describe('Bookmark button for MSFT stock').click();
 
 // Go back and search for AAPL
 await page.getByRole('button').first().describe('Back button with left arrow icon').click({"timeout":9000});

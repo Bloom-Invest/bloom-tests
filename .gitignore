@@ -7,3 +7,4 @@ test-results/
 .stably-playwright-wrapper.config.*
 package-lock.json
 tests/.stably/last-run.json
+.stably-browser
