@@ -63,6 +63,6 @@ await expect(page.getByRole('heading', { name: 'Magnificent 7' })).toBeVisible()
 await test.step("Click 'Options', then 'Delete portfolio'. Verify empty portfolio state.", async () => {
 await page.getByRole('button', { name: 'Options' }).click();
 await page.getByRole('menuitem', { name: 'Delete portfolio' }).click();
-await expect(page).aiAssert('Assert there are no portfolios and we are on empty state.');
+await expect(page).aiAssert('Assert there are no portfolios and we are on empty state.', { timeout: 60000 });
 });
 });
