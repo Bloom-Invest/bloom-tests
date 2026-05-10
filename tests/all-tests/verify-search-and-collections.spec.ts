@@ -7,7 +7,7 @@ await page.goto(`/search`);});
 await test.step("From the search page, open Low Cost ETFs, return, open Magnificent 7, verify the seven associated companies, and navigate to AAPL stock details.", async () => {
 await page.waitForLoadState('networkidle');
 await page.getByRole('link', { name: /Low Cost ETFs/ }).describe('Low Cost ETFs collection card').click();
-await page.getByRole('button').first().describe('Back navigation button').click({"timeout":9000});
+await page.getByRole('button', { name: /back/i }).describe('Back navigation button').click({"timeout":9000});
 await page.getByRole('link', { name: /Magnificent 7/ }).describe('Magnificent 7 card with microchip icon').click();
 
 // Wait for the collection to load

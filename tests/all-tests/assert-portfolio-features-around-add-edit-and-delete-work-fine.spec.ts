@@ -20,7 +20,10 @@ test.afterAll(async ({ browser }) => {
 
 test("Assert portfolio features around add, edit, and delete work fine", async ({ page }) => {
 await test.step("Create a portfolio from the Magnificent 7 collection.", async () => {
-await page.goto('/collection/90');
+// Navigate to Magnificent 7 collection via search to avoid hardcoded ID
+await page.goto('/search');
+await page.waitForLoadState('networkidle');
+await page.getByRole('link', { name: /Magnificent 7/ }).describe('Magnificent 7 collection card').click();
 await page.waitForLoadState('networkidle');
 await page.getByRole('button', { name: 'Copy collection to portfolio' }).describe('Copy collection to portfolio button').click();
 await page.getByRole('button', { name: 'Create Portfolio' }).describe('Create portfolio from collection button').click();
