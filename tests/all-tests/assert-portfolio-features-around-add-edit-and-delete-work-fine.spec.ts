@@ -48,6 +48,12 @@ await expect(page.getByText('3m Change')).toBeVisible();
 });
 
 await test.step("Edit portfolio allocation and save changes.", async () => {
+try {
+  await page.getByRole('heading', { name: /Bloom experience/i }).waitFor({ state: 'visible', timeout: 3000 });
+  await page.keyboard.press('Escape');
+} catch {
+  // Feedback modal not present — nothing to do
+}
 await page.getByRole('button', { name: 'Options' }).click();
 await page.getByRole('menuitem', { name: 'Edit portfolio' }).click();
 await page.locator('#allocation-0').fill('20');
