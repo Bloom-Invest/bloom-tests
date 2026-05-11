@@ -1,6 +1,6 @@
 import { test, expect } from '@stablyai/playwright-test';
 
-test("Verify Search and Collections", async ({ page, context, agent }) => {
+test("Verify Search and Collections", async ({ page }) => {
 await test.step("Navigate to the search page.", async () => {
 await page.goto(`/search`);});
 
