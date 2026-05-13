@@ -6,14 +6,17 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Search returns relevant results for ticker and company name queries", async ({ page, agent }) => {
   await test.step("Navigate to search page", async () => {
-    await page.goto('/search');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/search', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Dismiss paywall if present
     const exploreFree = page.getByRole('button', { name: 'Explore free' }).describe('Explore free button');
-    if (await exploreFree.isVisible({ timeout: 3000 }).catch(() => false)) {
+    try {
+      await exploreFree.waitFor({ state: 'visible', timeout: 3000 });
       await exploreFree.click();
       await page.waitForTimeout(500);
+    } catch {
+      // Paywall not present
     }
   });
 

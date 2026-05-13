@@ -8,30 +8,42 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Markets page displays market data with stock prices and percentage changes", async ({ page }) => {
   await test.step("Navigate to the Markets page", async () => {
-    await page.goto('/markets');
+    await page.goto('/markets', { waitUntil: 'domcontentloaded' });
 
     // Handle subscription overlay if it appears
     const exploreBtn = page.getByRole('button', { name: 'Explore free' });
     const closeBtn = page.getByRole('button', { name: 'Close' });
-    if (await exploreBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await exploreBtn.waitFor({ state: 'visible', timeout: 5000 });
       await exploreBtn.click();
       // If redirected away, navigate back
       if (!page.url().includes('/markets')) {
         // Dismiss any tutorial overlay
         const tapOverlay = page.getByText('Tap anywhere to continue');
-        if (await tapOverlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+        try {
+          await tapOverlay.waitFor({ state: 'visible', timeout: 2000 });
           await tapOverlay.click();
+        } catch {
+          // No tutorial overlay
         }
-        await page.goto('/markets');
+        await page.goto('/markets', { waitUntil: 'domcontentloaded' });
       }
-    } else if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await closeBtn.click();
+    } catch {
+      try {
+        await closeBtn.waitFor({ state: 'visible', timeout: 2000 });
+        await closeBtn.click();
+      } catch {
+        // No overlay at all
+      }
     }
 
     // Dismiss notification CTA if present
     const dismissBtn = page.getByRole('button', { name: 'Dismiss notification CTA' });
-    if (await dismissBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    try {
+      await dismissBtn.waitFor({ state: 'visible', timeout: 3000 });
       await dismissBtn.click();
+    } catch {
+      // No notification CTA
     }
   });
 

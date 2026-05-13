@@ -7,8 +7,8 @@ import { aiAssertSafe } from '../helpers/aiAssertSafe';
  */
 test("Different asset types render correctly on symbol pages", async ({ page }) => {
   await test.step("Verify ETF page loads correctly with Bottom Line (QQQ)", async () => {
-    await page.goto('/symbol/QQQ');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/symbol/QQQ', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('text=/QQQ/').first().describe('QQQ ticker')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=/Nasdaq 100 ETF/i').first().describe('ETF name')).toBeVisible({ timeout: 10000 });
@@ -24,7 +24,7 @@ test("Different asset types render correctly on symbol pages", async ({ page }) 
         // Fallback: any of the ETF-specific metric labels render
         fallback: async () => {
           const metric = page.getByText(/AUM|Assets Under Management|Expense Ratio|Yield|Holdings|Top Holdings|Net Assets/i).first();
-          return await metric.isVisible({ timeout: 5000 }).catch(() => false);
+          try { await metric.waitFor({ state: 'visible', timeout: 5000 }); return true; } catch { return false; }
         },
       },
     );
@@ -34,8 +34,8 @@ test("Different asset types render correctly on symbol pages", async ({ page }) 
   });
 
   await test.step("Verify individual stock page with Bottom Line (AAPL)", async () => {
-    await page.goto('/symbol/AAPL');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/symbol/AAPL', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('text=/AAPL/').first().describe('AAPL ticker')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=/Apple/i').first().describe('Company name')).toBeVisible({ timeout: 10000 });
@@ -51,7 +51,7 @@ test("Different asset types render correctly on symbol pages", async ({ page }) 
         // Fallback: any of the company-specific metric labels render
         fallback: async () => {
           const metric = page.getByText(/Profit|Margin|Revenue|Growth|Cashflow|Cash Flow|Earnings|EPS|P\/E/i).first();
-          return await metric.isVisible({ timeout: 5000 }).catch(() => false);
+          try { await metric.waitFor({ state: 'visible', timeout: 5000 }); return true; } catch { return false; }
         },
       },
     );

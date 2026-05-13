@@ -7,8 +7,8 @@ import { aiAssertSafe } from '../helpers/aiAssertSafe';
  */
 test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
   await test.step("Invalid symbol shows error message", async () => {
-    await page.goto('/symbol/ZZZZZ');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/symbol/ZZZZZ', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('text=/ZZZZZ/').first().describe('Invalid ticker')).toBeVisible({ timeout: 10000 });
 
@@ -21,7 +21,7 @@ test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
         // Fallback: any of the known error affordances on the invalid-symbol page
         fallback: async () => {
           const errorText = page.getByText(/Problem fetching data|Not found|Try again|Error/i).first();
-          return await errorText.isVisible({ timeout: 5000 }).catch(() => false);
+          try { await errorText.waitFor({ state: 'visible', timeout: 5000 }); return true; } catch { return false; }
         },
       },
     );
@@ -36,8 +36,8 @@ test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
   });
 
   await test.step("Non-existent route does not crash the app", async () => {
-    await page.goto('/this-page-does-not-exist-at-all');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/this-page-does-not-exist-at-all', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000);
 
     // App should either redirect or show some content (not a blank/error page)
@@ -51,7 +51,7 @@ test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
         // Fallback: bottom navigation present means the app shell rendered (didn't crash)
         fallback: async () => {
           const nav = page.locator('a').filter({ hasText: /^(Portfolio|Markets|Ideas|Chat|Settings)$/ }).first();
-          return await nav.isVisible({ timeout: 5000 }).catch(() => false);
+          try { await nav.waitFor({ state: 'visible', timeout: 5000 }); return true; } catch { return false; }
         },
       },
     );

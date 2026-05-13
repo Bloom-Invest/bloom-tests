@@ -7,8 +7,8 @@ import { aiAssertSafe } from '../helpers/aiAssertSafe';
  */
 test("Chat page allows sending messages and receiving AI responses", async ({ page }) => {
   await test.step("Navigate to the Chat page", async () => {
-    await page.goto('/chat');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/chat', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
   });
 
   await test.step("Verify chat interface loads with suggested questions", async () => {
@@ -23,9 +23,10 @@ test("Chat page allows sending messages and receiving AI responses", async ({ pa
   await test.step("Click a suggested question and verify AI responds", async () => {
     // Click "What can I do with Bloom?" or similar general question
     const bloomQuestion = page.locator('button').filter({ hasText: /What can I do with Bloom/i });
-    if (await bloomQuestion.isVisible({ timeout: 3000 }).catch(() => false)) {
+    try {
+      await bloomQuestion.waitFor({ state: 'visible', timeout: 3000 });
       await bloomQuestion.click();
-    } else {
+    } catch {
       const firstSuggestion = page.locator('button').filter({ hasText: /netflix|P\/E|invest|NVIDIA|portfolio|market/i }).first();
       await firstSuggestion.click();
     }
@@ -61,8 +62,12 @@ test("Chat page allows sending messages and receiving AI responses", async ({ pa
           if (responseLength.trim().length >= 80) return true;
           // Generic last-resort: any meaningful sentence on the page that isn't
           // the suggested-question buttons.
-          const anyLong = await page.getByText(/\S{40,}/).first().isVisible({ timeout: 5000 }).catch(() => false);
-          return anyLong;
+          try {
+            await page.getByText(/\S{40,}/).first().waitFor({ state: 'visible', timeout: 5000 });
+            return true;
+          } catch {
+            return false;
+          }
         },
       },
     );

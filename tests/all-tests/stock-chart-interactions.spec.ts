@@ -6,8 +6,8 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Stock chart allows switching time periods", async ({ page }) => {
   await test.step("Navigate to AAPL symbol page", async () => {
-    await page.goto('/symbol/AAPL');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/symbol/AAPL', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('text=/AAPL/').first().describe('AAPL ticker')).toBeVisible({ timeout: 10000 });
   });
 

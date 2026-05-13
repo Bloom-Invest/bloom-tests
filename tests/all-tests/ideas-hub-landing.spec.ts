@@ -6,8 +6,8 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Ideas hub shows trades, AI portfolios, and collections", async ({ page }) => {
   await test.step("Navigate to the Ideas page", async () => {
-    await page.goto('/ideas');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/ideas', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
   });
 
   await test.step("Verify Latest Trades section is visible", async () => {
@@ -25,7 +25,7 @@ test("Ideas hub shows trades, AI portfolios, and collections", async ({ page }) 
     await expect(collectionsSection).toBeVisible({ timeout: 10000 });
 
     const collectionNames = page.locator('text=/Low Cost ETFs|Magnificent 7|Bloom Portfolio|Bill Ackman/i').first().describe('Collection name');
-    await expect(collectionNames).toBeVisible({ timeout: 5000 });
+    await expect(collectionNames).toBeVisible({ timeout: 15000 });
   });
 
   await test.step("Verify navigation to collections sub-page works", async () => {

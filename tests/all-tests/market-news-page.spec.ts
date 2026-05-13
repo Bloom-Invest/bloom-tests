@@ -8,17 +8,18 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Market News page displays news articles and expands on click", async ({ page }) => {
   await test.step("Navigate to the Market News page", async () => {
-    await page.goto('/ideas/news');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/ideas/news', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Dismiss paywall if it appears
     try {
       const exploreFreeBtn = page.getByRole('button', { name: 'Explore free' });
-      if (await exploreFreeBtn.isVisible({ timeout: 5000 })) {
-        await exploreFreeBtn.click();
-        await page.waitForLoadState('networkidle');
-      }
-    } catch {}
+      await exploreFreeBtn.waitFor({ state: 'visible', timeout: 5000 });
+      await exploreFreeBtn.click();
+      await page.waitForLoadState('domcontentloaded');
+    } catch {
+      // No paywall
+    }
 
     await expect(page.getByRole('heading', { name: 'Market News', level: 1 })).toBeVisible({ timeout: 10000 });
   });

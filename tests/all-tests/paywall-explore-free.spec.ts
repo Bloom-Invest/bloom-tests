@@ -7,15 +7,15 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Onboarding skip grants access to content", async ({ page }) => {
   await test.step("Navigate to app root", async () => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
   });
 
   await test.step("Skip onboarding", async () => {
     const skipBtn = page.locator('button, a, [role="button"]').filter({ hasText: /skip and explore/i }).first();
     await expect(skipBtn).toBeVisible({ timeout: 10000 });
     await skipBtn.click();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
   });
 
@@ -30,11 +30,10 @@ test("Onboarding skip grants access to content", async ({ page }) => {
 
     for (const dismissBtn of dismissSelectors) {
       try {
-        if (await dismissBtn.isVisible({ timeout: 3000 })) {
-          await dismissBtn.click();
-          await page.waitForTimeout(1000);
-          break;
-        }
+        await dismissBtn.waitFor({ state: 'visible', timeout: 3000 });
+        await dismissBtn.click();
+        await page.waitForTimeout(1000);
+        break;
       } catch {
         // Button not found, try next
       }

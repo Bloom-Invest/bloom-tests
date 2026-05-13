@@ -6,14 +6,17 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Watchlist displays stocks and supports adding via bookmark", async ({ page }) => {
   await test.step("Navigate to Portfolios/Watchlist page", async () => {
-    await page.goto('/portfolios');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Dismiss paywall if present
     const exploreFree = page.getByRole('button', { name: 'Explore free' }).describe('Explore free button');
-    if (await exploreFree.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await exploreFree.waitFor({ state: 'visible', timeout: 5000 });
       await exploreFree.click();
       await page.waitForTimeout(500);
+    } catch {
+      // Paywall not present
     }
   });
 
@@ -25,8 +28,8 @@ test("Watchlist displays stocks and supports adding via bookmark", async ({ page
   });
 
   await test.step("Navigate to AAPL and verify stock page loads correctly", async () => {
-    await page.goto('/symbol/AAPL');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/symbol/AAPL', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('text=/AAPL/').first().describe('AAPL ticker')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=/Apple/i').first().describe('Apple company name')).toBeVisible({ timeout: 10000 });
