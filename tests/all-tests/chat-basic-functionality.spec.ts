@@ -62,8 +62,12 @@ test("Chat page allows sending messages and receiving AI responses", async ({ pa
           if (responseLength.trim().length >= 80) return true;
           // Generic last-resort: any meaningful sentence on the page that isn't
           // the suggested-question buttons.
-          const anyLong = await page.getByText(/\S{40,}/).first().isVisible().catch(() => false);
-          return anyLong;
+          try {
+            await page.getByText(/\S{40,}/).first().waitFor({ state: 'visible', timeout: 5000 });
+            return true;
+          } catch {
+            return false;
+          }
         },
       },
     );
