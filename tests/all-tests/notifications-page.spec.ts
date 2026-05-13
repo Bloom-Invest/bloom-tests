@@ -3,10 +3,13 @@ import { aiAssertSafe } from '../helpers/aiAssertSafe';
 
 test("Notifications page loads and displays notification history or empty state", async ({ page }) => {
   await test.step("Navigate to the Notifications page", async () => {
-    await page.goto('/notifications');
+    await page.goto('/notifications', { waitUntil: 'domcontentloaded' });
     const closeBtn = page.getByRole('button', { name: 'Close' });
-    if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await closeBtn.waitFor({ state: 'visible', timeout: 5000 });
       await closeBtn.click();
+    } catch {
+      // No overlay
     }
     await page.waitForLoadState('domcontentloaded');
   });
@@ -22,7 +25,7 @@ test("Notifications page loads and displays notification history or empty state"
         // Fallback: bottom navigation is visible (the app shell rendered)
         fallback: async () => {
           const nav = page.locator('a').filter({ hasText: /^(Portfolio|Markets|Ideas|Chat|Settings)$/ }).first();
-          return await nav.isVisible({ timeout: 5000 }).catch(() => false);
+          try { await nav.waitFor({ state: 'visible', timeout: 5000 }); return true; } catch { return false; }
         },
       },
     );

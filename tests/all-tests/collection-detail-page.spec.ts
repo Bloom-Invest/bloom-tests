@@ -9,17 +9,20 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Collection detail page shows stocks with price and percentage data", async ({ page }) => {
   await test.step("Navigate to the Collections page and dismiss any overlays", async () => {
-    await page.goto('/ideas/collections');
+    await page.goto('/ideas/collections', { waitUntil: 'domcontentloaded' });
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
-    if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await closeBtn.waitFor({ state: 'visible', timeout: 5000 });
       await closeBtn.click();
+    } catch {
+      // No overlay
     }
   });
 
   await test.step("Verify the Collections page loads with collection cards", async () => {
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Look for collections-related content
     const collectionsContent = page.locator('text=/collections|themes|categories/i').first();
@@ -33,15 +36,16 @@ test("Collection detail page shows stocks with price and percentage data", async
       hasText: /magnificent|ETF|AI|tech|growth|dividend|value|energy|healthcare/i
     }).first();
 
-    if (await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await collectionCard.waitFor({ state: 'visible', timeout: 5000 });
       await collectionCard.click();
-    } else {
+    } catch {
       // Fallback: click the first substantial interactive element
       const firstCard = page.getByRole('button').filter({ hasText: /\w{3,}/ }).first();
       await firstCard.click();
     }
 
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
   });
 
   await test.step("Verify the collection detail page shows stocks with relevant data", async () => {

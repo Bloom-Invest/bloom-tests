@@ -6,13 +6,16 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Bottom navigation routes to correct pages", async ({ page }) => {
   await test.step("Navigate to app and dismiss paywall", async () => {
-    await page.goto('/portfolios');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     const exploreFree = page.getByRole('button', { name: 'Explore free' }).describe('Explore free button');
-    if (await exploreFree.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await exploreFree.waitFor({ state: 'visible', timeout: 5000 });
       await exploreFree.click();
       await page.waitForTimeout(500);
+    } catch {
+      // Paywall not present
     }
   });
 

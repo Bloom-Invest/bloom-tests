@@ -8,24 +8,33 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("AI Arena page displays AI portfolio managers and shows details on selection", async ({ page }) => {
   await test.step("Navigate to the AI Arena page and dismiss any overlays", async () => {
-    await page.goto('/ideas/ai-arena');
+    await page.goto('/ideas/ai-arena', { waitUntil: 'domcontentloaded' });
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
     const exploreBtn = page.getByRole('button', { name: 'Explore free' });
-    if (await exploreBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    try {
+      await exploreBtn.waitFor({ state: 'visible', timeout: 3000 });
       await exploreBtn.click();
       // If redirected, navigate back
       if (!page.url().includes('/ideas/ai-arena')) {
         // Dismiss any tutorial overlay
         const tapOverlay = page.getByText('Tap anywhere to continue');
-        if (await tapOverlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+        try {
+          await tapOverlay.waitFor({ state: 'visible', timeout: 2000 });
           await tapOverlay.click();
+        } catch {
+          // No tutorial overlay
         }
-        await page.goto('/ideas/ai-arena');
+        await page.goto('/ideas/ai-arena', { waitUntil: 'domcontentloaded' });
       }
-    } else if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await closeBtn.click();
+    } catch {
+      try {
+        await closeBtn.waitFor({ state: 'visible', timeout: 2000 });
+        await closeBtn.click();
+      } catch {
+        // No overlay
+      }
     }
   });
 

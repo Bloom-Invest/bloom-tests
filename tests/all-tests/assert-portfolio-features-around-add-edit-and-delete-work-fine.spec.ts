@@ -3,13 +3,16 @@ import { test, expect } from '@stablyai/playwright-test';
 test.afterAll(async ({ browser }) => {
   const page = await browser.newPage();
   try {
-    await page.goto('/portfolios');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
     const portfolioLink = page.getByText('Magnificent 7').first();
-    if (await portfolioLink.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await portfolioLink.waitFor({ state: 'visible', timeout: 5000 });
       await portfolioLink.click();
       await page.getByRole('button', { name: 'Options' }).click();
       await page.getByRole('menuitem', { name: 'Delete portfolio' }).click();
+    } catch {
+      // Portfolio doesn't exist — nothing to clean up
     }
   } catch {
     // Portfolio doesn't exist or already cleaned up — nothing to do
@@ -21,10 +24,10 @@ test.afterAll(async ({ browser }) => {
 test("Assert portfolio features around add, edit, and delete work fine", async ({ page }) => {
 await test.step("Create a portfolio from the Magnificent 7 collection.", async () => {
 // Navigate to Magnificent 7 collection via search to avoid hardcoded ID
-await page.goto('/search');
-await page.waitForLoadState('networkidle');
+await page.goto('/search', { waitUntil: 'domcontentloaded' });
+await page.waitForLoadState('domcontentloaded');
 await page.getByRole('link', { name: /Magnificent 7/ }).describe('Magnificent 7 collection card').click();
-await page.waitForLoadState('networkidle');
+await page.waitForLoadState('domcontentloaded');
 await page.getByRole('button', { name: 'Copy collection to portfolio' }).describe('Copy collection to portfolio button').click();
 await page.getByRole('button', { name: 'Create Portfolio' }).describe('Create portfolio from collection button').click();
 });

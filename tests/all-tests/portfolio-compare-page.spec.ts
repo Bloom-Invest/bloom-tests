@@ -9,17 +9,20 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Portfolio compare page loads and shows comparison data", async ({ page }) => {
   await test.step("Navigate to the Portfolios page and dismiss any overlays", async () => {
-    await page.goto('/portfolios');
+    await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
-    if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await closeBtn.waitFor({ state: 'visible', timeout: 5000 });
       await closeBtn.click();
+    } catch {
+      // No overlay
     }
   });
 
   await test.step("Verify the Portfolios page loads", async () => {
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // The page should show portfolio-related content
     const bodyText = await page.locator('body').textContent();
@@ -29,13 +32,16 @@ test("Portfolio compare page loads and shows comparison data", async ({ page }) 
 
   await test.step("Navigate to the portfolio compare page", async () => {
     // Try navigating directly to the compare page
-    await page.goto('/portfolios/compare');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/portfolios/compare', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
-    if (await closeBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    try {
+      await closeBtn.waitFor({ state: 'visible', timeout: 3000 });
       await closeBtn.click();
+    } catch {
+      // No overlay
     }
   });
 

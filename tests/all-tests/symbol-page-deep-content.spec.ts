@@ -7,8 +7,8 @@ import { aiAssertSafe } from '../helpers/aiAssertSafe';
  */
 test("Symbol page shows Bottom Line, news, and collection associations", async ({ page }) => {
   await test.step("Navigate to AAPL symbol page", async () => {
-    await page.goto('/symbol/AAPL');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/symbol/AAPL', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('text=/AAPL/').first().describe('AAPL ticker')).toBeVisible({ timeout: 10000 });
   });
 
@@ -29,14 +29,14 @@ test("Symbol page shows Bottom Line, news, and collection associations", async (
         // Fallback: at least one Bottom Line metric label is rendered
         fallback: async () => {
           const metric = page.getByText(/Profit|Growth|Price|Activity|Risk|Valuation/i).first();
-          return await metric.isVisible({ timeout: 5000 }).catch(() => false);
+          try { await metric.waitFor({ state: 'visible', timeout: 5000 }); return true; } catch { return false; }
         },
       },
     );
   });
 
-  await test.step("Verify Ask Bloom AI section exists", async () => {
-    await expect(page.locator('text=/Ask Bloom AI|Explain business|Analyze market|Find catalysts|Check risks/i').first().describe('Ask Bloom AI section')).toBeVisible({ timeout: 10000 });
+  await test.step("Verify Key Events or Earnings section exists", async () => {
+    await expect(page.locator('text=/Key Events|Earnings Transcripts|Insights/i').first().describe('Key Events or Earnings section')).toBeVisible({ timeout: 10000 });
   });
 
   await test.step("Scroll down and verify additional sections", async () => {
@@ -52,7 +52,7 @@ test("Symbol page shows Bottom Line, news, and collection associations", async (
         // Fallback: any of the below-the-fold sections rendered
         fallback: async () => {
           const section = page.getByText(/Related|Peers|Industry|News|Events|Collections|Appears in/i).first();
-          return await section.isVisible({ timeout: 5000 }).catch(() => false);
+          try { await section.waitFor({ state: 'visible', timeout: 5000 }); return true; } catch { return false; }
         },
       },
     );

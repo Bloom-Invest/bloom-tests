@@ -8,17 +8,20 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("More/Settings page displays settings options and sections", async ({ page }) => {
   await test.step("Navigate to the More/Settings page and dismiss any overlays", async () => {
-    await page.goto('/more');
+    await page.goto('/more', { waitUntil: 'domcontentloaded' });
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
-    if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await closeBtn.waitFor({ state: 'visible', timeout: 5000 });
       await closeBtn.click();
+    } catch {
+      // No overlay
     }
   });
 
   await test.step("Verify the Settings/More page loads", async () => {
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // The page should show settings-related content
     const settingsContent = page.locator('text=/settings|more|account|preferences/i').first();

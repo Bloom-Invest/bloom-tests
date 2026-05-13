@@ -8,18 +8,21 @@ import { test, expect } from '@stablyai/playwright-test';
  */
 test("Ideas Picks page displays trade ideas with stock tickers", async ({ page }) => {
   await test.step("Navigate to the Ideas Picks page and dismiss any overlays", async () => {
-    await page.goto('/ideas/picks');
+    await page.goto('/ideas/picks', { waitUntil: 'domcontentloaded' });
 
     // Handle subscription overlay if it appears
     const closeBtn = page.getByRole('button', { name: 'Close' });
-    if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+    try {
+      await closeBtn.waitFor({ state: 'visible', timeout: 5000 });
       await closeBtn.click();
+    } catch {
+      // No overlay
     }
   });
 
   await test.step("Verify the Ideas Picks page loads with trade ideas and stock tickers", async () => {
     // Wait for the page to fully load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Use aiAssert to verify the page shows trade ideas, stock picks, or investment content
     // with at least one stock ticker visible
