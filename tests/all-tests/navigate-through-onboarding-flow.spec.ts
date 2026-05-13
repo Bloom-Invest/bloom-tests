@@ -34,8 +34,8 @@ test("Navigate through onboarding flow", async ({ page, context, agent }) => {
 
   await test.step("Add AAPL and NVDA to the watchlist", async () => {
     // Stock rows are buttons containing the ticker name
-    await page.getByRole('button', { name: /AAPL/ }).click();
-    await page.getByRole('button', { name: /NVDA/ }).click();
+    await page.getByRole('button', { name: /AAPL/ }).first().click();
+    await page.getByRole('button', { name: /NVDA/ }).first().click();
     const addButton = page.getByRole('button', { name: 'Add to my watchlist' });
     await expect(addButton).toBeEnabled();
     await addButton.click();
