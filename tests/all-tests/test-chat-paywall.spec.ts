@@ -14,8 +14,9 @@ import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
  *    it. Must call dismissFeedbackModal() before every aiAssert and after navigation/sends.
  *
  * 3. SEND BUTTON: The chat send button has no accessible name (it's an SVG icon). Use
- *    input.press('Enter') instead of clicking the button. Wait 3s+ after each send for the
- *    message to register and the counter to update.
+ *    input.press('Enter') instead of clicking the button. After pressing Enter, wait for the
+ *    textbox to clear — that confirms the message was submitted. The final aiAssert (60s timeout)
+ *    handles waiting for the counter to update.
  *
  * 4. NEW CHAT TIMING: After clicking "+ New", wait ~1s for the new thread to initialize
  *    before interacting with the input. The textbox may not be ready immediately.
@@ -31,7 +32,7 @@ test("Test chat + paywall", async ({ page }) => {
     await input.waitFor({ state: 'visible', timeout: 10000 });
     await input.fill('hello');
     await input.press('Enter');
-    await page.waitForTimeout(3000);
+    await expect(input).toHaveValue('', { timeout: 30000 });
     await dismissFeedbackModal(page);
   });
 
@@ -43,7 +44,7 @@ test("Test chat + paywall", async ({ page }) => {
     await input.waitFor({ state: 'visible', timeout: 10000 });
     await input.fill('What stocks should I buy?');
     await input.press('Enter');
-    await page.waitForTimeout(3000);
+    await expect(input).toHaveValue('', { timeout: 30000 });
     await dismissFeedbackModal(page);
   });
 
@@ -55,8 +56,7 @@ test("Test chat + paywall", async ({ page }) => {
     await input.waitFor({ state: 'visible', timeout: 10000 });
     await input.fill('Summarize the market today');
     await input.press('Enter');
-    // Wait longer for the response + paywall to render
-    await page.waitForTimeout(5000);
+    await expect(input).toHaveValue('', { timeout: 30000 });
     await dismissFeedbackModal(page);
   });
 
