@@ -1,4 +1,5 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 test.afterAll(async ({ browser }) => {
   const page = await browser.newPage();
@@ -23,16 +24,22 @@ test.afterAll(async ({ browser }) => {
 
 test("Assert portfolio features around add, edit, and delete work fine", async ({ page }) => {
 await test.step("Create a portfolio from the Magnificent 7 collection.", async () => {
-// Navigate to Magnificent 7 collection via search to avoid hardcoded ID
 await page.goto('/search', { waitUntil: 'domcontentloaded' });
 await page.waitForLoadState('domcontentloaded');
+await dismissFeedbackModal(page);
 await page.getByRole('link', { name: /Magnificent 7/ }).describe('Magnificent 7 collection card').click();
 await page.waitForLoadState('domcontentloaded');
-await page.getByRole('button', { name: 'Copy collection to portfolio' }).describe('Copy collection to portfolio button').click();
+await dismissFeedbackModal(page);
+// Scroll down to find the "Copy collection to portfolio" button (may be below fold)
+const copyBtn = page.getByRole('button', { name: 'Copy collection to portfolio' });
+await copyBtn.scrollIntoViewIfNeeded();
+await copyBtn.click();
+await dismissFeedbackModal(page);
 await page.getByRole('button', { name: 'Create Portfolio' }).describe('Create portfolio from collection button').click();
 });
 
 await test.step("Assert portfolio was created successfully with graphs and stock holdings.", async () => {
+await dismissFeedbackModal(page);
 await expect(page.getByRole('heading', { name: 'Magnificent 7' })).toBeVisible();
 await expect(page.getByRole('heading', { name: 'Holdings' })).toBeVisible();
 await expect(page.getByRole('link', { name: /AAPL/ })).toBeVisible();
@@ -51,14 +58,10 @@ await expect(page.getByText('3m Change')).toBeVisible();
 });
 
 await test.step("Edit portfolio allocation and save changes.", async () => {
-try {
-  await page.getByRole('heading', { name: /Bloom experience/i }).waitFor({ state: 'visible', timeout: 3000 });
-  await page.keyboard.press('Escape');
-} catch {
-  // Feedback modal not present — nothing to do
-}
+await dismissFeedbackModal(page);
 await page.getByRole('button', { name: 'Options' }).click();
 await page.getByRole('menuitem', { name: 'Edit portfolio' }).click();
+await dismissFeedbackModal(page);
 await page.locator('#allocation-0').fill('20');
 await page.getByRole('button', { name: 'Save Changes' }).click();
 await expect(page.getByRole('heading', { name: 'Magnificent 7' })).toBeVisible();
