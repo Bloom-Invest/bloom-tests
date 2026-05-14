@@ -1,6 +1,24 @@
 import { test, expect } from '@stablyai/playwright-test';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
+/**
+ * BLOOM PITFALLS (search & collections):
+ *
+ * 1. BACK BUTTON: The Bloom Header back button renders as <Button> with only an SVG arrow
+ *    icon inside — no text, no aria-label. getByRole('button', { name: /back/i }) will
+ *    never match. Use page.goBack() (Playwright browser back) instead.
+ *
+ * 2. FEEDBACK MODAL: Can appear on any page navigation and overlays the entire viewport.
+ *    Always call dismissFeedbackModal() after navigating to a new page and before assertions.
+ *
+ * 3. COLLECTION STOCK LINKS: Stocks in collection tables render as <Link> elements with the
+ *    ticker symbol in the accessible name. Use getByRole('link', { name: /AAPL/ }) — not
+ *    company names, which may be empty (the API returns name: "" for some stocks).
+ *
+ * 4. ALGOLIA SEARCH FLAKINESS: Avoid depending on live search results in headless runs.
+ *    Prefer navigating directly from collection rows (getByRole('link', { name: /TICKER/ }))
+ *    instead of using the search input to find stocks.
+ */
 test("Verify Search and Collections", async ({ page }) => {
 await test.step("Navigate to the search page.", async () => {
 await page.goto(`/search`, { waitUntil: 'domcontentloaded' });

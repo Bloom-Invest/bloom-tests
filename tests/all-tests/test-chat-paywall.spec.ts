@@ -1,6 +1,25 @@
 import { test, expect } from '@stablyai/playwright-test';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
+/**
+ * BLOOM PITFALLS (chat paywall):
+ *
+ * 1. FREE MESSAGE LIMIT: MAX_FREE_MESSAGES = 3 (frontend/src/components/ChatPage/index.tsx).
+ *    The paywall triggers when messageCount >= 3, so the wall appears inline after sending
+ *    the 3rd message (not on the 4th attempt). The counter shows "0 / 3 free messages left
+ *    today" and a "Subscribe" link appears next to it.
+ *
+ * 2. FEEDBACK MODAL: A "How's your Bloom experience so far?" modal can appear at any time
+ *    and overlays the entire viewport. It blocks aiAssert from seeing the paywall UI behind
+ *    it. Must call dismissFeedbackModal() before every aiAssert and after navigation/sends.
+ *
+ * 3. SEND BUTTON: The chat send button has no accessible name (it's an SVG icon). Use
+ *    input.press('Enter') instead of clicking the button. Wait 3s+ after each send for the
+ *    message to register and the counter to update.
+ *
+ * 4. NEW CHAT TIMING: After clicking "+ New", wait ~1s for the new thread to initialize
+ *    before interacting with the input. The textbox may not be ready immediately.
+ */
 test("Test chat + paywall", async ({ page }) => {
   await test.step("Navigate to the chat page.", async () => {
     await page.goto(`/chat`, { waitUntil: 'domcontentloaded' });

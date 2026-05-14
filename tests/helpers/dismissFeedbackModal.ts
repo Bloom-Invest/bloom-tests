@@ -3,12 +3,22 @@ import { Page } from '@stablyai/playwright-test';
 /**
  * Dismiss feedback/experience modals that overlay the viewport.
  *
+ * WHY THIS EXISTS: Bloom shows feedback modals unpredictably on any page. They overlay
+ * the entire viewport and block ALL test interactions — clicks, fills, and aiAssert calls.
+ * Without dismissal, tests time out waiting for elements hidden behind the modal.
+ *
+ * WHEN TO CALL: After every page navigation (goto, click link, goBack) and before every
+ * aiAssert or critical interaction. The modal can appear at any time, so err on the side
+ * of calling too often — each call exits in ~2s if no modal is present.
+ *
  * Known variants:
  * 1. "How's your Bloom experience so far?" — has "Love it!" and "Give feedback" buttons
- * 2. "Give feedback directly to the founder" — full feedback form with X close button
- * 3. "Bloom experience" heading variant
+ * 2. "Give feedback directly to the founder" — full feedback form with teal X close button
+ * 3. "Bloom experience" heading variant (older UI)
  *
- * Uses waitFor instead of isVisible (which silently ignores timeout in Playwright).
+ * IMPORTANT: Uses waitFor() with short timeouts, NOT isVisible(). Playwright's isVisible()
+ * silently ignores the timeout option and returns immediately — this is the #1 cause of
+ * race conditions in modal dismissal guards.
  */
 export async function dismissFeedbackModal(page: Page): Promise<void> {
   // Variant 1: "How's your Bloom experience" with action buttons

@@ -1,6 +1,25 @@
 import { test, expect } from '@stablyai/playwright-test';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
+/**
+ * BLOOM PITFALLS (portfolio features):
+ *
+ * 1. FEEDBACK MODAL: The "How's your Bloom experience so far?" modal can appear on ANY page
+ *    at ANY time, overlaying the entire viewport and blocking all clicks. Call
+ *    dismissFeedbackModal() after every navigation and before every interaction step.
+ *    It has appeared mid-portfolio-creation, mid-edit, and on the collection page.
+ *
+ * 2. "COPY COLLECTION TO PORTFOLIO" BUTTON: On the collection detail page, this button is
+ *    often below the fold (below the stock list). Use scrollIntoViewIfNeeded() before clicking.
+ *
+ * 3. CLEANUP (afterAll): The afterAll hook deletes the "Magnificent 7" portfolio to prevent
+ *    state leaking between runs. Uses waitFor (not isVisible, which silently ignores timeout
+ *    in Playwright). If the portfolio doesn't exist, the catch block handles it gracefully.
+ *
+ * 4. isVisible({ timeout }) ANTI-PATTERN: Playwright's locator.isVisible() returns immediately
+ *    regardless of timeout option. Always use waitFor({ state: 'visible', timeout }) in a
+ *    try/catch instead. This is the #1 cause of race conditions in modal checks.
+ */
 test.afterAll(async ({ browser }) => {
   const page = await browser.newPage();
   try {
