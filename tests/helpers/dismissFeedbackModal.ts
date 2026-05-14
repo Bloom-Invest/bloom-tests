@@ -55,7 +55,7 @@ export async function dismissFeedbackModal(page: Page): Promise<void> {
 
   // Variant 3: Generic "Bloom experience" heading
   try {
-    const heading = page.getByRole('heading', { name: /Bloom experience/i });
+    const heading = page.getByRole('heading', { name: /Bloom experience/i }).first();
     await heading.waitFor({ state: 'visible', timeout: 1000 });
     await page.keyboard.press('Escape');
     await heading.waitFor({ state: 'hidden', timeout: 1500 }).catch(() => {});
