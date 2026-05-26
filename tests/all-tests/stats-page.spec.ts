@@ -10,7 +10,7 @@ test("Stats page", async ({ page, context }) => {
     try {
       await exploreBtn.waitFor({ state: 'visible', timeout: 3000 });
       await exploreBtn.click();
-      if (!page.url().includes('/symbol/AAPL')) {
+      if (!page.url().includes('/symbol/AAPL/stats')) {
         const tapOverlay = page.getByText('Tap anywhere to continue');
         try {
           await tapOverlay.waitFor({ state: 'visible', timeout: 2000 });
