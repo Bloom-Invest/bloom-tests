@@ -33,7 +33,6 @@ test("Onboarding skip grants access to content", async ({ page }) => {
       try {
         await btn.waitFor({ state: 'visible', timeout: 5000 });
         await btn.click();
-        await page.waitForTimeout(1000);
         break;
       } catch {
         // Not found, try next
