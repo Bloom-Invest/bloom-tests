@@ -17,7 +17,6 @@ test("Onboarding skip grants access to content", async ({ page }) => {
     const skipBtn = page.locator('button, a, [role="button"]').filter({ hasText: /skip to explore/i }).first();
     await expect(skipBtn).toBeVisible({ timeout: 15000 });
     await skipBtn.click();
-    await page.waitForTimeout(2000);
   });
 
   await test.step("Handle post-skip screens", async () => {
@@ -34,7 +33,6 @@ test("Onboarding skip grants access to content", async ({ page }) => {
       try {
         await btn.waitFor({ state: 'visible', timeout: 5000 });
         await btn.click();
-        await page.waitForTimeout(1500);
       } catch {
         // Not found, try next
       }
@@ -45,7 +43,6 @@ test("Onboarding skip grants access to content", async ({ page }) => {
     try {
       await openBloomBtn.waitFor({ state: 'visible', timeout: 5000 });
       await openBloomBtn.click();
-      await page.waitForTimeout(1500);
     } catch {
       // Not on result page
     }
@@ -55,7 +52,6 @@ test("Onboarding skip grants access to content", async ({ page }) => {
       const tapOverlay = page.getByText('Tap anywhere to continue');
       await tapOverlay.waitFor({ state: 'visible', timeout: 3000 });
       await tapOverlay.click();
-      await page.waitForTimeout(1000);
     } catch {
       // No overlay
     }

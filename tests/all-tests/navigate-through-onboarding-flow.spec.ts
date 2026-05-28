@@ -25,7 +25,6 @@ test("Navigate through onboarding flow", async ({ page }) => {
 
   await test.step("Skip experience level selection", async () => {
     await page.getByText('Not sure yet? Skip this step').click();
-    await page.waitForTimeout(1000);
   });
 
   await test.step("Verify stock selection screen and pick stocks", async () => {
@@ -64,7 +63,6 @@ test("Navigate through onboarding flow", async ({ page }) => {
         // No skip link either, proceed
       }
     }
-    await page.waitForTimeout(1000);
   });
 
   await test.step("Handle AI Moment screen", async () => {
@@ -75,7 +73,6 @@ test("Navigate through onboarding flow", async ({ page }) => {
     const continueBtn = page.getByRole('button', { name: 'Continue' });
     await expect(continueBtn).toBeVisible({ timeout: 30000 });
     await continueBtn.click();
-    await page.waitForTimeout(1000);
   });
 
   await test.step("Handle AI Arena teaser screen", async () => {
@@ -85,7 +82,6 @@ test("Navigate through onboarding flow", async ({ page }) => {
     const continueBtn = page.getByRole('button', { name: 'Continue' });
     await expect(continueBtn).toBeVisible({ timeout: 5000 });
     await continueBtn.click();
-    await page.waitForTimeout(1000);
   });
 
   await test.step("Handle notifications screen", async () => {
@@ -107,21 +103,18 @@ test("Navigate through onboarding flow", async ({ page }) => {
         // No finish button either, proceed
       }
     }
-    await page.waitForTimeout(2000);
   });
 
   await test.step("Handle paywall - navigate through to 'Explore free'", async () => {
     // After notifications, the "Unlock Bloom Pro" paywall modal appears.
     // Step 1 only has "Continue" (no "Explore free"). Click Continue to get to step 2.
     // Step 2 shows pricing with "Explore free" below.
-    await page.waitForTimeout(2000);
 
     // Step 1: Click "Continue" on the feature showcase
     const continueBtn = page.getByRole('button', { name: 'Continue' });
     try {
       await continueBtn.waitFor({ state: 'visible', timeout: 10000 });
       await continueBtn.click();
-      await page.waitForTimeout(2000);
     } catch {
       // Continue button not found
     }
@@ -132,15 +125,12 @@ test("Navigate through onboarding flow", async ({ page }) => {
       await exploreFree.scrollIntoViewIfNeeded();
       await exploreFree.waitFor({ state: 'visible', timeout: 10000 });
       await exploreFree.click();
-      await page.waitForTimeout(1500);
     } catch {
       // Explore free not found, try scrolling
       await page.keyboard.press('End');
-      await page.waitForTimeout(500);
       try {
         await exploreFree.waitFor({ state: 'visible', timeout: 3000 });
         await exploreFree.click();
-        await page.waitForTimeout(1500);
       } catch {
         // Still not found
       }
@@ -153,7 +143,6 @@ test("Navigate through onboarding flow", async ({ page }) => {
     try {
       await exploreFreeVersion.waitFor({ state: 'visible', timeout: 5000 });
       await exploreFreeVersion.click();
-      await page.waitForTimeout(1000);
     } catch {
       // No one-time offer
     }
@@ -165,7 +154,6 @@ test("Navigate through onboarding flow", async ({ page }) => {
     try {
       await openBloomBtn.waitFor({ state: 'visible', timeout: 5000 });
       await openBloomBtn.click();
-      await page.waitForTimeout(1500);
     } catch {
       // Not on result page, might have gone straight to app
     }
@@ -176,7 +164,6 @@ test("Navigate through onboarding flow", async ({ page }) => {
       const tapOverlay = page.getByText('Tap anywhere to continue');
       await tapOverlay.waitFor({ state: 'visible', timeout: 5000 });
       await tapOverlay.click();
-      await page.waitForTimeout(1000);
     } catch {
       // No overlay
     }
