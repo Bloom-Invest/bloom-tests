@@ -23,10 +23,11 @@ test("Onboarding skip grants access to content", async ({ page }) => {
     // After "Skip to explore", the user may land on one-time-offer or result page.
     // Try to dismiss various screens in sequence.
 
-    // Try "Explore free" / "Explore free version" buttons (paywall/OTO screens)
+    // Try "Explore free" / "Explore free version" / close buttons (paywall/OTO screens)
     const dismissButtons = [
       page.locator('button, a, [role="button"]').filter({ hasText: /explore free version/i }).first(),
       page.locator('button, a, [role="button"]').filter({ hasText: /^explore free$/i }).first(),
+      page.locator('[aria-label="Close"], [aria-label="Dismiss"]').first(),
     ];
 
     for (const btn of dismissButtons) {

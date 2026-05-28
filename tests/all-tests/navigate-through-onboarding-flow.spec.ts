@@ -5,28 +5,11 @@ import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
  * Navigate through the redesigned Bloom onboarding flow from start to finish.
  * Flow: Welcome → Experience level → Stock selection → AI Moment →
  *       AI Arena → Notifications → Paywall (multi-step) → Result → Main app
+ *
+ * No afterAll cleanup needed: watchlist entries created during onboarding are
+ * stored in localStorage, which is scoped to the test's browser context and
+ * does not persist across runs.
  */
-test.afterAll(async ({ browser }) => {
-  const page = await browser.newPage();
-  try {
-    await page.goto('/portfolios', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('domcontentloaded');
-    const portfolioLink = page.getByText('Watchlist').first();
-    try {
-      await portfolioLink.waitFor({ state: 'visible', timeout: 5000 });
-      await portfolioLink.click();
-      await page.getByRole('button', { name: 'Options' }).click();
-      await page.getByRole('menuitem', { name: 'Delete portfolio' }).click();
-    } catch {
-      // Portfolio doesn't exist — nothing to clean up
-    }
-  } catch {
-    // Already cleaned up or navigation failed
-  } finally {
-    await page.close();
-  }
-});
-
 test("Navigate through onboarding flow", async ({ page }) => {
 
   await test.step("Navigate to the home page and verify the Get Started button is visible", async () => {
