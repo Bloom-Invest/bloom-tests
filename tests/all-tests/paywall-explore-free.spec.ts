@@ -1,8 +1,9 @@
 import { test, expect } from '@stablyai/playwright-test';
+import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 /**
- * Test: Onboarding → Skip → Dismiss promo → Access content
- * Verify that a fresh session can navigate through onboarding,
+ * Test: Welcome → Skip to explore → Handle result/offer pages → Access content
+ * Verify that a fresh session can skip onboarding from the welcome screen,
  * dismiss any promotional modals, and reach the main app content.
  */
 test("Onboarding skip grants access to content", async ({ page }) => {
@@ -11,42 +12,59 @@ test("Onboarding skip grants access to content", async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
   });
 
-  await test.step("Skip onboarding", async () => {
-    const skipBtn = page.locator('button, a, [role="button"]').filter({ hasText: /skip and explore/i }).first();
-    await expect(skipBtn).toBeVisible({ timeout: 10000 });
+  await test.step("Click 'Skip to explore' on welcome screen", async () => {
+    // The welcome page has "Get started" (primary) and "Skip to explore" (skip link)
+    const skipBtn = page.locator('button, a, [role="button"]').filter({ hasText: /skip to explore/i }).first();
+    await expect(skipBtn).toBeVisible({ timeout: 15000 });
     await skipBtn.click();
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(2000);
   });
 
-  await test.step("Dismiss any promotional modals or overlays", async () => {
-    // After skipping onboarding, a "Try Bloom Pro" or similar promo may appear.
-    // Look for dismiss/close/skip/no thanks buttons and click if found.
-    const dismissSelectors = [
-      page.locator('button, a, [role="button"]').filter({ hasText: /no thanks|not now|maybe later|skip|close|dismiss|continue free|explore free/i }).first(),
+  await test.step("Handle post-skip screens", async () => {
+    // After "Skip to explore", the user may land on one-time-offer or result page.
+    // Try to dismiss various screens in sequence.
+
+    // Try "Explore free" / "Explore free version" / close buttons (paywall/OTO screens)
+    const dismissButtons = [
+      page.locator('button, a, [role="button"]').filter({ hasText: /explore free version/i }).first(),
+      page.locator('button, a, [role="button"]').filter({ hasText: /^explore free$/i }).first(),
       page.locator('[aria-label="Close"], [aria-label="Dismiss"]').first(),
-      page.locator('button svg, button [data-icon="close"]').first(),
     ];
 
-    for (const dismissBtn of dismissSelectors) {
+    for (const btn of dismissButtons) {
       try {
-        await dismissBtn.waitFor({ state: 'visible', timeout: 3000 });
-        await dismissBtn.click();
-        await page.waitForTimeout(1000);
+        await btn.waitFor({ state: 'visible', timeout: 5000 });
+        await btn.click();
         break;
       } catch {
-        // Button not found, try next
+        // Not found, try next
       }
     }
 
-    // Wait for any transition
-    await page.waitForTimeout(1000);
+    // Handle "You're all set!" result page with "Open Bloom" button
+    const openBloomBtn = page.getByRole('button', { name: /Open Bloom/i });
+    try {
+      await openBloomBtn.waitFor({ state: 'visible', timeout: 5000 });
+      await openBloomBtn.click();
+    } catch {
+      // Not on result page
+    }
+
+    // Handle "Tap anywhere to continue" overlay
+    try {
+      const tapOverlay = page.getByText('Tap anywhere to continue');
+      await tapOverlay.waitFor({ state: 'visible', timeout: 3000 });
+      await tapOverlay.click();
+    } catch {
+      // No overlay
+    }
+  });
+
+  await test.step("Dismiss feedback modal if shown", async () => {
+    await dismissFeedbackModal(page);
   });
 
   await test.step("Verify main app content is accessible", async () => {
-    await expect(page).aiAssert(
-      'The app is showing main content such as market data, stock prices, portfolios, news, a navigation bar, or any core app screen. Promotional modals may still be visible but the main content should be accessible behind or after dismissing them.',
-      { timeout: 60000, fullPage: true }
-    );
+    // After skipping, should land on main app with navigation bar
+    await expect(page.getByRole('link', { name: 'Chat' })).toBeVisible({ timeout: 15000 });
   });
 });
