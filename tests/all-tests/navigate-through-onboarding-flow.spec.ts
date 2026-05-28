@@ -81,7 +81,7 @@ test("Navigate through onboarding flow", async ({ page }) => {
 
   await test.step("Handle AI Arena teaser screen", async () => {
     // Screen 4: AI Arena - "Our AI portfolio managers beat the market"
-    await expect(page.getByText(/AI portfolio managers/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /AI portfolio managers/i })).toBeVisible({ timeout: 10000 });
 
     const continueBtn = page.getByRole('button', { name: 'Continue' });
     await expect(continueBtn).toBeVisible({ timeout: 5000 });
@@ -126,8 +126,8 @@ test("Navigate through onboarding flow", async ({ page }) => {
     // Step 2: Click "Explore free" on the pricing screen
     const exploreFree = page.locator('button').filter({ hasText: /^Explore free$/i }).first();
     try {
-      await exploreFree.scrollIntoViewIfNeeded();
       await exploreFree.waitFor({ state: 'visible', timeout: 10000 });
+      await exploreFree.scrollIntoViewIfNeeded();
       await exploreFree.click();
     } catch {
       // Explore free not found, try scrolling
