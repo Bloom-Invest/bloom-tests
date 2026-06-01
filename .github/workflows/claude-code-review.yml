@@ -78,5 +78,5 @@ jobs:
             If gh pr review fails (e.g. permissions), fall back to posting a comment with `gh pr comment` instead.
 
           claude_args: |
-            --model claude-sonnet-4-6
+            --model claude-opus-4-8
             --allowed-tools "Read,Glob,Grep,Bash(gh pr *),Bash(gh issue *),Bash(gh pr comment *),Bash(gh pr diff *),Bash(gh pr view *),Bash(gh pr review *),Bash(git diff *),Bash(git log *),Bash(git show *),Edit,Write,Bash(git add *),Bash(git commit *),Bash(git push *),WebSearch,WebFetch"
