@@ -50,17 +50,17 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
     await dismissFeedbackModal(page);
 
     // Verify GPT 5.5 card (use the card with performance data to disambiguate from legend button)
-    const gptCard = page.getByRole('button', { name: /GPT 5\.5.*\d+d/ });
+    const gptCard = page.getByRole('button', { name: /GPT 5\.5.*%/ });
     await expect(gptCard).toBeVisible();
     await expect(gptCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
 
     // Verify Gemini 3.5 Flash card
-    const geminiCard = page.getByRole('button', { name: /Gemini 3\.5 Flash.*\d+d/ });
+    const geminiCard = page.getByRole('button', { name: /Gemini 3\.5 Flash.*%/ });
     await expect(geminiCard).toBeVisible();
     await expect(geminiCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
 
-    // Verify Opus 4.7 card
-    const opusCard = page.getByRole('button', { name: /Opus 4\.7.*\d+d/ });
+    // Verify Opus 4.8 card
+    const opusCard = page.getByRole('button', { name: /Opus 4\.8.*%/ });
     await expect(opusCard).toBeVisible();
     await expect(opusCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
   });
@@ -73,20 +73,20 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
     await expect(page.getByRole('button', { name: '1W' })).toBeVisible();
     await expect(page.getByRole('button', { name: '1M' })).toBeVisible();
     await expect(page.getByRole('button', { name: '3M' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'YTD' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'YTD', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'ALL', exact: true })).toBeVisible();
 
     // Verify chart legend shows all three AI managers with performance percentages
     // Each name appears in card, chart legend, and Portfolio Breakdown tab
     expect(await page.getByText(/GPT 5\.5/).count()).toBeGreaterThanOrEqual(2);
     expect(await page.getByText(/Gemini 3\.5 Flash/).count()).toBeGreaterThanOrEqual(2);
-    expect(await page.getByText(/Opus 4\.7/).count()).toBeGreaterThanOrEqual(2);
+    expect(await page.getByText(/Opus 4\.8/).count()).toBeGreaterThanOrEqual(2);
   });
 
   await test.step("Click on an AI portfolio manager and verify it becomes selected", async () => {
     await dismissFeedbackModal(page);
     // Click on the GPT 5.5 card (use card with performance data to disambiguate from Portfolio Breakdown tab)
-    const gptCard = page.getByRole('button', { name: /GPT 5\.5.*\d+d/ });
+    const gptCard = page.getByRole('button', { name: /GPT 5\.5.*%/ });
     await gptCard.click();
 
     // Verify the card is still visible after clicking
