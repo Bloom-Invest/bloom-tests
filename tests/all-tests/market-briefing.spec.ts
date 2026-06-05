@@ -45,10 +45,13 @@ test('Markets page generates and renders a real market briefing', async ({ page 
 
     const summaryCard = page.getByTestId('market-summary-card');
     await expect(summaryCard).toBeVisible({ timeout: 60000 });
+    await expect(summaryCard).not.toContainText(
+      /Generating your market update|Please wait|couldn't generate|failed/i,
+      { timeout: 60000 },
+    );
+    await expect(summaryCard).toContainText(/AAPL|MSFT|portfolio|market|stock/i);
 
     const text = (await summaryCard.innerText()).trim();
     expect(text.length).toBeGreaterThan(80);
-    expect(text).not.toMatch(/Generating your market update|Please wait|couldn't generate|failed/i);
-    expect(text).toMatch(/AAPL|MSFT|portfolio|market|stock/i);
   });
 });
