@@ -40,7 +40,13 @@ async function sendAndConfirm(
   await input.press('Enter');
   // Wait for the counter to show the expected remaining count, confirming the send registered.
   // The counter text is e.g. "2 / 3 free messages left today" or "0 / 3 free messages left today".
-  await expect(page.getByText(`${expectedRemaining} / 3 free messages left`)).toBeVisible({ timeout: 30000 });
+  //
+  // The app only increments messageCount AFTER submitQuery fully resolves — i.e. once the entire
+  // SSE response has finished streaming (see ChatPage/index.tsx: setMessageCount runs in the
+  // `if (success)` block after `await submitQuery(...)`). Tool-augmented prompts (market map,
+  // sentiment) routinely stream for well over 30s on prod, so the counter can lag the send by a
+  // minute. Wait up to 120s for the stream to complete rather than racing it.
+  await expect(page.getByText(`${expectedRemaining} / 3 free messages left`)).toBeVisible({ timeout: 120000 });
   await dismissFeedbackModal(page);
 }
 
