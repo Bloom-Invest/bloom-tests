@@ -1,4 +1,5 @@
-import { test, expect } from '@stablyai/playwright-test';
+import { test, expect } from '@playwright/test';
+import { grokAssert } from '../helpers/grokAssert';
 
 /**
  * Test: Portfolio creation via AI
@@ -27,7 +28,7 @@ test("Portfolio creation with AI-generated holdings", async ({ page }) => {
   });
 
   await test.step("Verify portfolio creation flow starts", async () => {
-    await expect(page).aiAssert(
+    await grokAssert(page, 
       'A portfolio creation interface is visible, showing either a name input field, a stock selection screen, or an AI-assisted portfolio builder.',
       { timeout: 60000 }
     );

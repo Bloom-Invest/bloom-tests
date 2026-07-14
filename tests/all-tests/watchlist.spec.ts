@@ -1,4 +1,5 @@
-import { test, expect } from '@stablyai/playwright-test';
+import { test, expect } from '@playwright/test';
+import { grokAssert } from '../helpers/grokAssert';
 
 /**
  * Test: Watchlist functionality
@@ -21,7 +22,7 @@ test("Watchlist displays stocks and supports adding via bookmark", async ({ page
   });
 
   await test.step("Verify portfolios page loads with content or empty state", async () => {
-    await expect(page).aiAssert(
+    await grokAssert(page, 
       'The page shows either a portfolio/watchlist with stocks, or an empty state with a "Create" button.',
       { timeout: 60000 }
     );
@@ -36,7 +37,7 @@ test("Watchlist displays stocks and supports adding via bookmark", async ({ page
     await expect(page.locator('text=/\\$[\\d,.]+/').first().describe('Stock price')).toBeVisible({ timeout: 10000 });
 
     // Verify the stock detail page has loaded with chart and key UI elements
-    await expect(page).aiAssert(
+    await grokAssert(page, 
       'The AAPL stock detail page shows a price chart with time range selectors (1D, 1W, 1M, etc.) and a bottom navigation bar.',
       { timeout: 60000 }
     );

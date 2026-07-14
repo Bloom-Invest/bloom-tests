@@ -1,4 +1,4 @@
-import { test, expect } from '@stablyai/playwright-test';
+import { test, expect } from '@playwright/test';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 /**

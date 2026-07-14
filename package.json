@@ -1,12 +1,12 @@
 {
   "name": "bloom-tests",
   "version": "1.0.0",
-  "description": "E2E tests for Bloom (Stably Agent 2.0 / Playwright)",
+  "description": "E2E tests for Bloom (Playwright + in-house Grok vision assertions)",
   "scripts": {
-    "test": "stably test",
-    "test:headed": "stably test --headed",
-    "create": "stably create",
-    "fix": "stably fix"
+    "test": "playwright test --project all-tests",
+    "test:headed": "playwright test --project all-tests --headed",
+    "test:one": "playwright test --project all-tests --grep",
+    "report": "playwright show-report"
   },
   "repository": {
     "type": "git",
@@ -21,9 +21,8 @@
   },
   "homepage": "https://github.com/Bloom-Invest/bloom-tests#readme",
   "devDependencies": {
-    "@playwright/test": "^1.50.0",
-    "@stablyai/playwright-test": "^2.1.11",
-    "playwright": "^1.58.2",
-    "stably": "^4.12.27"
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^26.1.1",
+    "playwright": "^1.58.2"
   }
 }

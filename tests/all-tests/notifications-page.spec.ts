@@ -1,4 +1,4 @@
-import { test, expect } from '@stablyai/playwright-test';
+import { test, expect } from '@playwright/test';
 import { aiAssertSafe } from '../helpers/aiAssertSafe';
 
 test("Notifications page loads and displays notification history or empty state", async ({ page }) => {

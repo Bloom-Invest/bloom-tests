@@ -5,7 +5,7 @@
 <!-- CODEX-ONLY:START -->
 ## Code Review Instructions (Codex)
 
-Review this PR for Bloom's E2E test suite (Stably / Playwright against the Bloom app). The product under test is an AI investing app. Test reliability and selector resilience come first: a flaky test costs more than a missing assertion.
+Review this PR for Bloom's E2E test suite (Playwright against the Bloom app). The product under test is an AI investing app. Test reliability and selector resilience come first: a flaky test costs more than a missing assertion.
 
 Operate with a skeptical, evidence-driven mindset. Verify every claim against the actual code in the diff and its surrounding call paths. Distinguish confirmed bugs from assumptions. You may be wrong; accuracy is the shared objective. Optimize for precision: the author acts on every finding, so a false alarm costs more than a missed nit.
 
@@ -42,27 +42,23 @@ Operate with a skeptical, evidence-driven mindset. Verify every claim against th
 **End every review with one line:** `N P0, M P1, K P2, J P3 — top issue: <one sentence>`. Zero P0/P1/P2 → "No blocking issues."
 <!-- CODEX-ONLY:END -->
 
-E2E test suite for the [Bloom](https://bloom.onrender.com) investing app using Playwright + [Stably AI](https://stably.ai).
+E2E test suite for the [Bloom](https://bloom.onrender.com) investing app using Playwright with in-house vision assertions (OpenRouter Grok). Visual checks go through `tests/helpers/grokAssert.ts` (model `x-ai/grok-4.5`); it screenshots the page and returns a `{pass,reason}` verdict. `aiAssertSafe()` delegates to it.
 
 ## Quick Start
 
 ```bash
 npm install
-source ~/.hermes/.env  # STABLY_API_KEY, STABLY_PROJECT_ID
+npx playwright install chromium
+export OPENROUTER_API_KEY=...   # required for grokAssert (vision assertions)
 
 # Run all tests
-STABLY_API_KEY=$STABLY_API_KEY STABLY_PROJECT_ID=$STABLY_PROJECT_ID \
-  BASE_URL=https://bloom.onrender.com \
-  ./node_modules/.bin/stably test --project all-tests
+BASE_URL=https://bloom.onrender.com npx playwright test --project all-tests
 
 # Run a single test
-./node_modules/.bin/stably test --grep "Test chat" --project all-tests
+npx playwright test --grep "Test chat" --project all-tests
 
-# View a run
-./node_modules/.bin/stably runs view <runId>
-
-# Auto-fix failures (runs in background, 10-120 min)
-./node_modules/.bin/stably fix <runId>
+# Open the HTML report
+npx playwright show-report
 ```
 
 ## Project Structure
@@ -71,7 +67,8 @@ STABLY_API_KEY=$STABLY_API_KEY STABLY_PROJECT_ID=$STABLY_PROJECT_ID \
 tests/
   all-tests/          ← 26 spec files, one per feature area
   helpers/
-    aiAssertSafe.ts   ← Wraps aiAssert with infra-error fallback
+    aiAssertSafe.ts   ← Delegates to grokAssert (kept for back-compat)
+    grokAssert.ts     ← Screenshot -> OpenRouter Grok -> {pass,reason} verdict
     dismissFeedbackModal.ts ← Dismisses Bloom feedback modals (see pitfalls)
   knowledge.md        ← 178 items of app behavior learned from test runs
 playwright.config.ts  ← Two projects: "chromium" (excludes all-tests) and "all-tests"
@@ -82,8 +79,8 @@ playwright.global-setup.ts ← Warms Render cold-start before tests run
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `STABLY_API_KEY` | Yes | Stably API key |
-| `STABLY_PROJECT_ID` | Yes | Stably project ID |
+| `OPENROUTER_API_KEY` | Yes | OpenRouter key for `grokAssert` vision calls |
+| `GROK_VISION_MODEL` | No | Vision model override (default `x-ai/grok-4.5`) |
 | `BASE_URL` | No | App URL (default: `https://bloom.onrender.com`) |
 
 ## Bloom UI Pitfalls
@@ -141,9 +138,10 @@ The Bloom API returns `name: ""` for some stocks (including AAPL). Bookmark butt
 
 Live search in headless runs can return unexpected results or hang. Prefer navigating directly from collection rows or known URLs instead of relying on search input.
 
-### 9. Stably Dashboard URLs Require Auth
+### 9. Inspecting Failures
 
-`app.stably.ai` URLs return a login page when fetched. Use `stably runs view <runId>` via CLI to inspect results.
+Runs produce a standard Playwright HTML report (`npx playwright show-report`) plus screenshots
+under `test-results/` on failure. A `grokAssert` failure prints the model's `reason` in the error.
 
 ### 10. Chronic Timeout Tests
 
@@ -151,11 +149,11 @@ These tests consistently time out even on a healthy app (as of May 2026): error-
 
 ## Diagnosing Failures: App vs Test
 
-Before running `stably fix`, check if the app itself was degraded:
+Before assuming a test is broken, check if the app itself was degraded:
 
 1. Check Render deploys and Sentry for errors during the run window
 2. Re-run the failing tests on a healthy app
-3. If the same tests fail on both, it's a test issue; run `stably fix`
+3. If the same tests fail on both, it's a test issue; fix the test
 4. If they only fail during degradation, the tests are fine
 
 ## Writing New Tests
@@ -166,4 +164,4 @@ Before running `stably fix`, check if the app itself was degraded:
 - Use ticker symbols in selectors, not company names
 - Use `scrollIntoViewIfNeeded()` before clicking below-fold elements
 - Add `afterAll` cleanup for any state-mutating tests (bookmarks, portfolios)
-- Prefer explicit Playwright selectors over `agent.act()` when the selector is known
+- Prefer explicit Playwright selectors over `grokAssert` when a deterministic check exists (cheaper, faster)
