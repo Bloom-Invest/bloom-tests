@@ -36,9 +36,9 @@ test("Search returns relevant results for ticker and company name queries", asyn
       .describe('Search input');
     await searchBox.waitFor({ state: 'visible', timeout: 15000 });
     await searchBox.fill('MSFT');
-    await page.waitForTimeout(2000);
 
-    // Verify Microsoft appears in results (deterministic)
+    // Verify Microsoft appears in results (deterministic).
+    // expect().toBeVisible() polls until the element appears, so no fixed wait needed.
     await expect(page.getByText(/MSFT|Microsoft/i).first().describe('MSFT result'))
       .toBeVisible({ timeout: 15000 });
   });
@@ -50,9 +50,9 @@ test("Search returns relevant results for ticker and company name queries", asyn
       .describe('Search input');
     await box.fill('');
     await box.fill('Tesla');
-    await page.waitForTimeout(2000);
 
-    // Verify Tesla appears in results (deterministic)
+    // Verify Tesla appears in results (deterministic).
+    // expect().toBeVisible() polls until the element appears, so no fixed wait needed.
     await expect(page.getByText(/TSLA|Tesla/i).first().describe('Tesla result'))
       .toBeVisible({ timeout: 15000 });
   });

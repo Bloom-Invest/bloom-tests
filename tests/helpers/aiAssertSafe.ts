@@ -26,7 +26,8 @@ export async function aiAssertSafe(
     const msg = err instanceof Error ? err.message : String(err);
     // A genuine visual FAIL should propagate. Only soften transport failures.
     const isInfra =
-      /OpenRouter HTTP 5\d\d/i.test(msg) ||
+      /OpenRouter HTTP (?:5\d\d|429)/i.test(msg) ||
+      /__TRANSPORT__/i.test(msg) ||
       /fetch failed/i.test(msg) ||
       /ECONNRESET|ETIMEDOUT|ENOTFOUND|socket hang up|AbortError|aborted/i.test(msg) ||
       /exhausted retries/i.test(msg);

@@ -10,8 +10,9 @@ import { Page, Locator, test } from '@playwright/test';
  * Backend: OpenRouter `x-ai/grok-4.5` (supports image input; ~$0.001/call).
  * Requires env `OPENROUTER_API_KEY`. Optional override `GROK_VISION_MODEL`.
  *
- * Transport errors (network/5xx) are retried; a genuine model verdict of
- * `pass:false` throws immediately with the model's reason.
+ * Transport errors (network/5xx/429) are retried; a genuine model verdict of
+ * `pass:false` is re-polled (re-screenshot + re-judge) until the assertion
+ * `timeout` budget expires, so late-rendering content is not a false failure.
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -19,7 +20,10 @@ const MODEL = process.env.GROK_VISION_MODEL || 'x-ai/grok-4.5';
 const MAX_TRANSPORT_RETRIES = 2;
 
 export interface GrokAssertOptions {
+  /** Total budget to keep polling (re-screenshot + re-judge) until the verdict passes. */
   timeout?: number;
+  /** Per-OpenRouter-request abort timeout. Defaults to min(timeout, 30000). */
+  fetchTimeout?: number;
   fullPage?: boolean;
   /** Scope the screenshot + judgment to a single element. */
   locator?: Locator;
@@ -85,9 +89,13 @@ async function callVision(
   }
 
   if (!resp.ok) {
-    // 5xx / 429 are transport-ish; surface status so the retry loop can decide.
     const text = await resp.text().catch(() => '');
-    throw new Error(`__TRANSPORT__ OpenRouter HTTP ${resp.status}: ${text.slice(0, 200)}`);
+    // Only 5xx and 429 (rate limit) are worth retrying. Client errors like
+    // 400/401/402/403 are deterministic — retrying wastes time and API calls,
+    // so surface them WITHOUT the __TRANSPORT__ prefix so the retry loop skips them.
+    const isTransientStatus = resp.status >= 500 || resp.status === 429;
+    const prefix = isTransientStatus ? '__TRANSPORT__ ' : '';
+    throw new Error(`${prefix}OpenRouter HTTP ${resp.status}: ${text.slice(0, 200)}`);
   }
 
   const data: any = await resp.json();
@@ -103,7 +111,13 @@ async function callVision(
   }
   try {
     const parsed = JSON.parse(jsonMatch[0]);
-    return { pass: !!parsed.pass, reason: String(parsed.reason ?? '') };
+    // The model is an third-party dependency, so tolerate type drift only for a
+    // real success: accept STRICT boolean `true` (and, defensively, the string
+    // "true"); treat anything else — including the string "false" — as a fail.
+    const raw = parsed.pass;
+    const pass =
+      raw === true || (typeof raw === 'string' && raw.trim().toLowerCase() === 'true');
+    return { pass, reason: String(parsed.reason ?? '') };
   } catch {
     return { pass: false, reason: `Unparseable model reply: ${content.slice(0, 200)}` };
   }
@@ -128,17 +142,23 @@ export async function grokAssert(
   options: GrokAssertOptions = {},
 ): Promise<void> {
   const { timeout = 60000, fullPage = false, locator } = options;
-
+  const fetchTimeout = options.fetchTimeout ?? Math.min(timeout, 30000);
   const shotTarget = locator ?? page;
-  const buffer = await shotTarget.screenshot(
-    locator ? {} : { fullPage },
-  );
-  const imageB64 = buffer.toString('base64');
 
-  let lastErr: unknown;
-  for (let attempt = 0; attempt <= MAX_TRANSPORT_RETRIES; attempt++) {
+  const deadline = Date.now() + timeout;
+  const POLL_INTERVAL_MS = 2000;
+  let lastFailure: Error | null = null;
+  let transportRetries = 0;
+
+  // Poll: re-screenshot + re-judge until the verdict passes or the budget expires.
+  // This mirrors Playwright's expect()/Stably's aiAssert so content that renders a
+  // few seconds after DOM load is not a false failure.
+  do {
+    const buffer = await shotTarget.screenshot(locator ? {} : { fullPage });
+    const imageB64 = buffer.toString('base64');
+
     try {
-      const verdict = await callVision(imageB64, prompt, timeout);
+      const verdict = await callVision(imageB64, prompt, fetchTimeout);
       if (verdict.pass) {
         test.info().annotations.push({
           type: 'grokAssert-pass',
@@ -146,17 +166,27 @@ export async function grokAssert(
         });
         return;
       }
-      throw new Error(
+      // Genuine visual FAIL — remember it and re-poll (content may still render).
+      lastFailure = new Error(
         `grokAssert FAILED\n  Assertion: ${prompt}\n  Model reason: ${verdict.reason}`,
       );
     } catch (err) {
-      if (isTransient(err) && attempt < MAX_TRANSPORT_RETRIES) {
-        lastErr = err;
-        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+      // Transport error: retry a bounded number of times, then surface it so
+      // aiAssertSafe can soften it. Non-transport errors propagate immediately.
+      if (isTransient(err) && transportRetries < MAX_TRANSPORT_RETRIES) {
+        transportRetries += 1;
+        await new Promise((r) => setTimeout(r, 1500 * transportRetries));
         continue;
       }
       throw err;
     }
-  }
-  throw lastErr ?? new Error('grokAssert: exhausted retries');
+
+    if (Date.now() + POLL_INTERVAL_MS >= deadline) break;
+    await page.waitForTimeout(POLL_INTERVAL_MS);
+  } while (Date.now() < deadline);
+
+  throw (
+    lastFailure ??
+    new Error(`grokAssert: no verdict within ${timeout}ms\n  Assertion: ${prompt}`)
+  );
 }
