@@ -100,9 +100,11 @@ async function callVision(
     const isTransientStatus = resp.status >= 500 || resp.status === 429;
     const isProviderOutage =
       resp.status === 401 || resp.status === 402 || resp.status === 403;
-    let prefix = '';
-    if (isTransientStatus) prefix = '__TRANSPORT__ ';
-    else if (isProviderOutage) prefix = '__VISION_UNAVAILABLE__ ';
+    const prefix = isTransientStatus
+      ? '__TRANSPORT__ '
+      : isProviderOutage
+      ? '__VISION_UNAVAILABLE__ '
+      : '';
     throw new Error(`${prefix}OpenRouter HTTP ${resp.status}: ${text.slice(0, 200)}`);
   }
 
@@ -197,7 +199,8 @@ export async function grokAssert(
       // wall of false failures. Only these key/billing errors soft-pass — a
       // genuine model verdict of pass:false still fails below.
       if (isVisionUnavailable(err)) {
-        const detail = err instanceof Error ? err.message : String(err);
+        const rawDetail = err instanceof Error ? err.message : String(err);
+        const detail = rawDetail.replace('__VISION_UNAVAILABLE__ ', '');
         test.info().annotations.push({
           type: 'grokAssert-vision-unavailable',
           description:
