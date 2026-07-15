@@ -1,4 +1,4 @@
-import { test, expect } from '@stablyai/playwright-test';
+import { test, expect } from '@playwright/test';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 /**
@@ -76,10 +76,10 @@ test("Test chat + paywall", async ({ page }) => {
     await dismissFeedbackModal(page);
     // After 3 messages the counter shows "0 / 3 free messages left today"
     // with a "Subscribe" link visible next to it.
-    await expect(page).aiAssert(
-      `The free messages counter shows 0 remaining (e.g. "0 / 3 free messages left today") ` +
-      `and a "Subscribe" link or subscription prompt is visible on the page.`,
-      { timeout: 60000 }
-    );
+    // Deterministic: counter text + Subscribe affordance.
+    await expect(page.getByText(/0\s*\/\s*3 free messages/i).first().describe('Free messages counter'))
+      .toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Subscribe/i).first().describe('Subscribe prompt'))
+      .toBeVisible({ timeout: 15000 });
   });
 });

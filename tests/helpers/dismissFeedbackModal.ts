@@ -1,4 +1,4 @@
-import { Page } from '@stablyai/playwright-test';
+import { Page } from '@playwright/test';
 
 /**
  * Dismiss feedback/experience modals that overlay the viewport.

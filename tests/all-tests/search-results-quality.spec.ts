@@ -1,10 +1,11 @@
-import { test, expect } from '@stablyai/playwright-test';
+import { test, expect } from '@playwright/test';
+import { grokAssert } from '../helpers/grokAssert';
 
 /**
  * Test: Search results quality
  * Search by ticker and company name, verify relevant results.
  */
-test("Search returns relevant results for ticker and company name queries", async ({ page, agent }) => {
+test("Search returns relevant results for ticker and company name queries", async ({ page }) => {
   await test.step("Navigate to search page", async () => {
     await page.goto('/search', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
@@ -21,32 +22,38 @@ test("Search returns relevant results for ticker and company name queries", asyn
   });
 
   await test.step("Verify search page loads with collections", async () => {
-    await expect(page).aiAssert(
+    await grokAssert(page, 
       'The page shows investment collections or categories like ETFs, Magnificent 7, or similar stock groupings.',
       { timeout: 60000 }
     );
   });
 
   await test.step("Search for a ticker symbol (MSFT)", async () => {
-    // Use agent.act to find and interact with the search input (may be non-standard)
-    await agent.act('Find the search input field and type "MSFT"', { page });
-    await page.waitForTimeout(2000);
+    // Bloom's search input has no stable role; match by placeholder/type with a fallback.
+    const searchBox = page
+      .locator('input[placeholder*="Search" i], input[type="search"], input[type="text"], textarea')
+      .first()
+      .describe('Search input');
+    await searchBox.waitFor({ state: 'visible', timeout: 15000 });
+    await searchBox.fill('MSFT');
 
-    // Verify Microsoft appears in results
-    await expect(page).aiAssert(
-      'Search results show Microsoft or MSFT as a match.',
-      { timeout: 60000 }
-    );
+    // Verify Microsoft appears in results (deterministic).
+    // expect().toBeVisible() polls until the element appears, so no fixed wait needed.
+    await expect(page.getByText(/MSFT|Microsoft/i).first().describe('MSFT result'))
+      .toBeVisible({ timeout: 15000 });
   });
 
   await test.step("Clear and search by company name (Tesla)", async () => {
-    await agent.act('Clear the search input field and type "Tesla"', { page });
-    await page.waitForTimeout(2000);
+    const box = page
+      .locator('input[placeholder*="Search" i], input[type="search"], input[type="text"], textarea')
+      .first()
+      .describe('Search input');
+    await box.fill('');
+    await box.fill('Tesla');
 
-    // Verify Tesla appears in results
-    await expect(page).aiAssert(
-      'Search results show Tesla or TSLA as a match.',
-      { timeout: 60000 }
-    );
+    // Verify Tesla appears in results (deterministic).
+    // expect().toBeVisible() polls until the element appears, so no fixed wait needed.
+    await expect(page.getByText(/TSLA|Tesla/i).first().describe('Tesla result'))
+      .toBeVisible({ timeout: 15000 });
   });
 });

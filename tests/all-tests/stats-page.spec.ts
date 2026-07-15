@@ -1,4 +1,5 @@
-import { test, expect } from '@stablyai/playwright-test';
+import { test, expect } from '@playwright/test';
+import { grokAssert } from '../helpers/grokAssert';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 test("Stats page", async ({ page, context }) => {
@@ -29,6 +30,6 @@ test("Stats page", async ({ page, context }) => {
 
   await test.step("Verify that stats are loaded and plausible for AAPL.", async () => {
     await dismissFeedbackModal(page);
-    await expect(page).aiAssert('Assert stats are loaded for AAPL and they look plausible', { timeout: 60000, fullPage: true });
+    await grokAssert(page, 'Assert stats are loaded for AAPL and they look plausible', { timeout: 60000, fullPage: true });
   });
 });

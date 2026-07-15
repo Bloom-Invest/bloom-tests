@@ -1,4 +1,5 @@
-import { test, expect } from '@stablyai/playwright-test';
+import { test, expect } from '@playwright/test';
+import { grokAssert } from '../helpers/grokAssert';
 
 /**
  * User Prompt:
@@ -26,7 +27,7 @@ test("Ideas Picks page displays trade ideas with stock tickers", async ({ page }
 
     // Use aiAssert to verify the page shows trade ideas, stock picks, or investment content
     // with at least one stock ticker visible
-    await expect(page).aiAssert(
+    await grokAssert(page, 
       'The page shows trade ideas, stock picks, or investment recommendations. At least one stock ticker symbol is visible on the page. The page is not showing an error or blank screen.',
       { timeout: 60000 }
     );
