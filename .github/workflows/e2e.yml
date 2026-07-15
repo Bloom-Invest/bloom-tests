@@ -2,11 +2,10 @@ name: e2e
 
 # Runs the Playwright + Grok-vision E2E suite against the live Bloom app.
 # Replaces Stably's hosted cloud runner (removed alongside the SDK).
+# The post-Bloom-merge run lives in Bloom-Invest/bloom's e2e workflow; here we
+# only run on suite-PRs and on manual dispatch.
 on:
   workflow_dispatch: {}
-  schedule:
-    # Daily at 06:30 UTC, before the 07:00 app-health-check cron inspects results.
-    - cron: '30 6 * * *'
   pull_request:
     paths:
       - 'tests/**'
