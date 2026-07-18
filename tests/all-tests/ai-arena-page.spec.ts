@@ -49,8 +49,8 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
   await test.step("Verify three AI portfolio managers are displayed with performance data", async () => {
     await dismissFeedbackModal(page);
 
-    // Verify GPT 5.5 card (use the card with performance data to disambiguate from legend button)
-    const gptCard = page.getByRole('button', { name: /GPT 5\.5.*%/ });
+    // Verify GPT 5.6 Sol card (use its YTD label to disambiguate it from the chart legend)
+    const gptCard = page.getByRole('button', { name: /GPT 5\.6 Sol.*YTD/ });
     await expect(gptCard).toBeVisible();
     await expect(gptCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
 
@@ -78,15 +78,15 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
 
     // Verify chart legend shows all three AI managers with performance percentages
     // Each name appears in card, chart legend, and Portfolio Breakdown tab
-    expect(await page.getByText(/GPT 5\.5/).count()).toBeGreaterThanOrEqual(2);
+    expect(await page.getByText(/GPT 5\.6 Sol/).count()).toBeGreaterThanOrEqual(2);
     expect(await page.getByText(/Gemini 3\.5 Flash/).count()).toBeGreaterThanOrEqual(2);
     expect(await page.getByText(/Opus 4\.8/).count()).toBeGreaterThanOrEqual(2);
   });
 
   await test.step("Click on an AI portfolio manager and verify it becomes selected", async () => {
     await dismissFeedbackModal(page);
-    // Click on the GPT 5.5 card (use card with performance data to disambiguate from Portfolio Breakdown tab)
-    const gptCard = page.getByRole('button', { name: /GPT 5\.5.*%/ });
+    // Click on the GPT 5.6 Sol card (use its YTD label to disambiguate from Portfolio Breakdown tab)
+    const gptCard = page.getByRole('button', { name: /GPT 5\.6 Sol.*YTD/ });
     await gptCard.click();
 
     // Verify the card is still visible after clicking
@@ -97,6 +97,6 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
     await dismissFeedbackModal(page);
     await expect(page.getByRole('heading', { name: 'Portfolio Breakdown' })).toBeVisible();
     // Verify at least one AI manager tab is visible in the Portfolio Breakdown section
-    await expect(page.getByRole('button', { name: 'GPT 5.5', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'GPT 5.6 Sol', exact: true })).toBeVisible();
   });
 });
