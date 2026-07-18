@@ -70,8 +70,10 @@ test("Navigate through onboarding flow", async ({ page }) => {
   });
 
   await test.step("Handle AI Moment screen", async () => {
-    // Screen 3: AI moment - "Here's what Bloom sees in <ticker>" or "Here's what Bloom sees"
-    await expect(page.getByRole('heading', { name: /Here's what Bloom sees/i })).toBeVisible({ timeout: 15000 });
+    // Screen 3: AI moment - heading is "Try asking Bloom about <ticker>"
+    // (onboarding.aiMomentTitle) or "Try asking Bloom" (aiMomentTitleDefault
+    // when no ticker was picked). Was "Here's what Bloom sees" before the copy change.
+    await expect(page.getByRole('heading', { name: /Try asking Bloom/i })).toBeVisible({ timeout: 15000 });
 
     // Click Continue to proceed
     const continueBtn = page.getByRole('button', { name: 'Continue' });
