@@ -49,18 +49,22 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
   await test.step("Verify three AI portfolio managers are displayed with performance data", async () => {
     await dismissFeedbackModal(page);
 
-    // Verify GPT 5.6 Sol card (use its YTD label to disambiguate it from the chart legend)
-    const gptCard = page.getByRole('button', { name: /GPT 5\.6 Sol.*YTD/ });
+    // Match the model cards by their stable brand prefix (GPT / Gemini / Opus),
+    // NOT the version number — Bloom bumps the arena model versions often
+    // (GPT 5.2 -> 5.5 -> 5.6 Sol, Opus 4.7 -> 4.8, ...) and pinning the exact
+    // version silently breaks this test on every rename. The `.*YTD` / `.*%`
+    // suffix keeps the card disambiguated from the bare chart-legend button.
+    const gptCard = page.getByRole('button', { name: /GPT.*YTD/ });
     await expect(gptCard).toBeVisible();
     await expect(gptCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
 
-    // Verify Gemini 3.5 Flash card
-    const geminiCard = page.getByRole('button', { name: /Gemini 3\.5 Flash.*%/ });
+    // Verify Gemini card
+    const geminiCard = page.getByRole('button', { name: /Gemini.*%/ });
     await expect(geminiCard).toBeVisible();
     await expect(geminiCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
 
-    // Verify Opus 4.8 card
-    const opusCard = page.getByRole('button', { name: /Opus 4\.8.*%/ });
+    // Verify Opus card
+    const opusCard = page.getByRole('button', { name: /Opus.*%/ });
     await expect(opusCard).toBeVisible();
     await expect(opusCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
   });
@@ -78,15 +82,17 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
 
     // Verify chart legend shows all three AI managers with performance percentages
     // Each name appears in card, chart legend, and Portfolio Breakdown tab
-    expect(await page.getByText(/GPT 5\.6 Sol/).count()).toBeGreaterThanOrEqual(2);
-    expect(await page.getByText(/Gemini 3\.5 Flash/).count()).toBeGreaterThanOrEqual(2);
-    expect(await page.getByText(/Opus 4\.8/).count()).toBeGreaterThanOrEqual(2);
+    // Chart legend + Portfolio Breakdown tab each repeat the manager names, so
+    // each brand appears in >=2 places. Match on brand prefix, not version.
+    expect(await page.getByText(/GPT/).count()).toBeGreaterThanOrEqual(2);
+    expect(await page.getByText(/Gemini/).count()).toBeGreaterThanOrEqual(2);
+    expect(await page.getByText(/Opus/).count()).toBeGreaterThanOrEqual(2);
   });
 
   await test.step("Click on an AI portfolio manager and verify it becomes selected", async () => {
     await dismissFeedbackModal(page);
-    // Click on the GPT 5.6 Sol card (use its YTD label to disambiguate from Portfolio Breakdown tab)
-    const gptCard = page.getByRole('button', { name: /GPT 5\.6 Sol.*YTD/ });
+    // Click on the GPT card (its YTD label disambiguates from the Portfolio Breakdown tab)
+    const gptCard = page.getByRole('button', { name: /GPT.*YTD/ });
     await gptCard.click();
 
     // Verify the card is still visible after clicking
@@ -97,6 +103,6 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
     await dismissFeedbackModal(page);
     await expect(page.getByRole('heading', { name: 'Portfolio Breakdown' })).toBeVisible();
     // Verify at least one AI manager tab is visible in the Portfolio Breakdown section
-    await expect(page.getByRole('button', { name: 'GPT 5.6 Sol', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /GPT/ }).first()).toBeVisible();
   });
 });
