@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
+// Headless Chromium reports Notification.permission as 'denied'. The notification
+// opt-in screen (bloom #2160) commits the default-on bundles even on "Skip"
+// (handleAlertsComplete), and useNotificationPreferences opens a blocking
+// "Notifications Blocked" modal whenever permission is strictly 'denied'. That
+// modal overlays the paywall and blocks every click after it. Granting the
+// permission up front keeps the flow on the happy path.
+test.use({ permissions: ['notifications'] });
+
 /**
  * Navigate through the redesigned Bloom onboarding flow from start to finish.
  * Flow: Welcome → Experience level → Stock selection → AI Moment →
@@ -116,6 +124,18 @@ test("Navigate through onboarding flow", async ({ page }) => {
       } catch {
         // No finish button either, proceed
       }
+    }
+  });
+
+  await test.step("Dismiss 'Notifications Blocked' modal if shown", async () => {
+    // Safety net: if the permission grant above ever stops covering it, this
+    // modal overlays the paywall and blocks all clicks. Close it via Cancel.
+    const blockedHeading = page.getByRole('heading', { name: 'Notifications Blocked' });
+    try {
+      await blockedHeading.waitFor({ state: 'visible', timeout: 3000 });
+      await page.getByRole('button', { name: 'Cancel' }).click();
+    } catch {
+      // Modal never appeared (expected when the notifications permission is granted)
     }
   });
 
