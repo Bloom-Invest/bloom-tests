@@ -91,8 +91,16 @@ test("Navigate through onboarding flow", async ({ page }) => {
   });
 
   await test.step("Handle notifications screen", async () => {
-    // Screen 5: Notifications - "Get alerted when <ticker> moves" or "Stay informed"
-    await expect(page.getByText(/Get alerted when.*moves|Stay informed/i)).toBeVisible({ timeout: 10000 });
+    // Screen 5: Notifications. The title is conditional on whether a stock was
+    // picked earlier: "Get alerted when <ticker> moves" (onboarding.slideTitle6Alerts)
+    // when there is a topSymbol, else "What should we tell you about?"
+    // (onboarding.slideTitle4). This test skips stock selection, so the no-ticker
+    // title is the one that normally renders — but accept either, since selection
+    // can succeed depending on seeded data.
+    // Was "Stay informed" before #2160 replaced the notification opt-in screen.
+    await expect(
+      page.getByText(/Get alerted when.*moves|What should we tell you about/i)
+    ).toBeVisible({ timeout: 10000 });
 
     // Skip alerts
     const skipBtn = page.getByText(/Skip.*I'll set up alerts later/i);
