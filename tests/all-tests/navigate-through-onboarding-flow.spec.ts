@@ -144,8 +144,12 @@ test("Navigate through onboarding flow", async ({ page }) => {
     // Step 1 only has "Continue" (no "Explore free"). Click Continue to get to step 2.
     // Step 2 shows pricing with "Explore free" below.
 
-    // Step 1: Click "Continue" on the feature showcase
-    const continueBtn = page.getByRole('button', { name: 'Continue' });
+    // Step 1: Click "Continue" on the feature showcase.
+    // exact: true is required here: the notifications slide stays mounted
+    // beneath the paywall, and its "Daily briefing" bundle toggle's accessible
+    // name contains "…Tech rally continues — S&P +1.2%", which substring-matches
+    // name: 'Continue' and triggers a strict mode violation.
+    const continueBtn = page.getByRole('button', { name: 'Continue', exact: true });
     try {
       await continueBtn.waitFor({ state: 'visible', timeout: 10000 });
       await continueBtn.click();
