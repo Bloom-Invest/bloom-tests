@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
+// Headless Chromium reports Notification.permission as 'denied'. The notification
+// opt-in screen (bloom #2160) commits the default-on bundles even on "Skip"
+// (handleAlertsComplete), and useNotificationPreferences opens a blocking
+// "Notifications Blocked" modal whenever permission is strictly 'denied'. That
+// modal overlays the paywall and blocks every click after it. Granting the
+// permission up front keeps the flow on the happy path.
+test.use({ permissions: ['notifications'] });
+
 /**
  * Navigate through the redesigned Bloom onboarding flow from start to finish.
  * Flow: Welcome → Experience level → Stock selection → AI Moment →
@@ -91,8 +99,16 @@ test("Navigate through onboarding flow", async ({ page }) => {
   });
 
   await test.step("Handle notifications screen", async () => {
-    // Screen 5: Notifications - "Get alerted when <ticker> moves" or "Stay informed"
-    await expect(page.getByText(/Get alerted when.*moves|Stay informed/i)).toBeVisible({ timeout: 10000 });
+    // Screen 5: Notifications. The title is conditional on whether a stock was
+    // picked earlier: "Get alerted when <ticker> moves" (onboarding.slideTitle6Alerts)
+    // when there is a topSymbol, else "What should we tell you about?"
+    // (onboarding.slideTitle4). This test skips stock selection, so the no-ticker
+    // title is the one that normally renders — but accept either, since selection
+    // can succeed depending on seeded data.
+    // Was "Stay informed" before #2160 replaced the notification opt-in screen.
+    await expect(
+      page.getByText(/Get alerted when.*moves|What should we tell you about/i)
+    ).toBeVisible({ timeout: 10000 });
 
     // Skip alerts
     const skipBtn = page.getByText(/Skip.*I'll set up alerts later/i);
@@ -111,13 +127,29 @@ test("Navigate through onboarding flow", async ({ page }) => {
     }
   });
 
+  await test.step("Dismiss 'Notifications Blocked' modal if shown", async () => {
+    // Safety net: if the permission grant above ever stops covering it, this
+    // modal overlays the paywall and blocks all clicks. Close it via Cancel.
+    const blockedHeading = page.getByRole('heading', { name: 'Notifications Blocked' });
+    try {
+      await blockedHeading.waitFor({ state: 'visible', timeout: 3000 });
+      await page.getByRole('button', { name: 'Cancel' }).click();
+    } catch {
+      // Modal never appeared (expected when the notifications permission is granted)
+    }
+  });
+
   await test.step("Handle paywall - navigate through to 'Explore free'", async () => {
     // After notifications, the "Unlock Bloom Pro" paywall modal appears.
     // Step 1 only has "Continue" (no "Explore free"). Click Continue to get to step 2.
     // Step 2 shows pricing with "Explore free" below.
 
-    // Step 1: Click "Continue" on the feature showcase
-    const continueBtn = page.getByRole('button', { name: 'Continue' });
+    // Step 1: Click "Continue" on the feature showcase.
+    // exact: true is required here: the notifications slide stays mounted
+    // beneath the paywall, and its "Daily briefing" bundle toggle's accessible
+    // name contains "…Tech rally continues — S&P +1.2%", which substring-matches
+    // name: 'Continue' and triggers a strict mode violation.
+    const continueBtn = page.getByRole('button', { name: 'Continue', exact: true });
     try {
       await continueBtn.waitFor({ state: 'visible', timeout: 10000 });
       await continueBtn.click();
