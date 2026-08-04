@@ -72,9 +72,14 @@ await page.getByRole('group', { name: 'Left' }).getByRole('combobox').selectOpti
 await page.getByRole('group', { name: 'Middle' }).getByRole('combobox').selectOption('marketCap');
 await page.locator('form').getByText('3M', { exact: true }).click();
 await page.getByRole('button', { name: 'Done' }).click();
-await expect(page.getByText('Symbol')).toBeVisible();
-await expect(page.getByText('Market cap')).toBeVisible();
-await expect(page.getByText('3m Change')).toBeVisible();
+// Assert on the TABLE HEADERS specifically. The "Change columns" <select>
+// keeps its chosen option's text in the DOM, and the option labels
+// (portfolios.columns.*) share wording with the header labels
+// (portfolios.columnHeaders.*) — so a page-wide getByText('Market cap')
+// resolves to 2 elements and fails Playwright strict mode.
+await expect(page.getByRole('columnheader', { name: 'Symbol' })).toBeVisible();
+await expect(page.getByRole('columnheader', { name: 'Market cap' })).toBeVisible();
+await expect(page.getByRole('columnheader', { name: '3m Change' })).toBeVisible();
 });
 
 await test.step("Edit portfolio allocation and save changes.", async () => {
