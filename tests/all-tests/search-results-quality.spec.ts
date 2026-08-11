@@ -1,52 +1,51 @@
-import { test, expect } from '@stablyai/playwright-test';
+import { test, expect } from '@playwright/test';
+import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 /**
  * Test: Search results quality
  * Search by ticker and company name, verify relevant results.
+ *
+ * NOTE: `/search` is a dead route — Bloom redirects it to /ideas/collections
+ * (see frontend/src/index.tsx: `<Route path="/search" ... Redirect to="/ideas/collections" />`).
+ * The live search input lives on the Ideas page (`/ideas`), rendered by
+ * frontend/src/components/Search/index.tsx as a plain
+ * `<input placeholder="Search stocks or crypto">`. No login required.
  */
-test("Search returns relevant results for ticker and company name queries", async ({ page, agent }) => {
-  await test.step("Navigate to search page", async () => {
-    await page.goto('/search', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('domcontentloaded');
+
+const SEARCH_INPUT = 'Search stocks or crypto';
+
+test("Search returns relevant results for ticker and company name queries", async ({ page }) => {
+  await test.step("Navigate to the Ideas page (hosts the search bar)", async () => {
+    await page.goto('/ideas', { waitUntil: 'domcontentloaded' });
+    await dismissFeedbackModal(page);
 
     // Dismiss paywall if present
     const exploreFree = page.getByRole('button', { name: 'Explore free' }).describe('Explore free button');
     try {
       await exploreFree.waitFor({ state: 'visible', timeout: 3000 });
       await exploreFree.click();
-      await page.waitForTimeout(500);
+      await dismissFeedbackModal(page);
     } catch {
       // Paywall not present
     }
   });
 
-  await test.step("Verify search page loads with collections", async () => {
-    await expect(page).aiAssert(
-      'The page shows investment collections or categories like ETFs, Magnificent 7, or similar stock groupings.',
-      { timeout: 60000 }
-    );
-  });
-
   await test.step("Search for a ticker symbol (MSFT)", async () => {
-    // Use agent.act to find and interact with the search input (may be non-standard)
-    await agent.act('Find the search input field and type "MSFT"', { page });
-    await page.waitForTimeout(2000);
+    const searchBox = page.getByPlaceholder(SEARCH_INPUT).describe('Search input');
+    await searchBox.waitFor({ state: 'visible', timeout: 15000 });
+    await searchBox.fill('MSFT');
 
-    // Verify Microsoft appears in results
-    await expect(page).aiAssert(
-      'Search results show Microsoft or MSFT as a match.',
-      { timeout: 60000 }
-    );
+    // toBeVisible() polls until the result appears, so no fixed wait needed.
+    await expect(page.getByText(/MSFT|Microsoft/i).first().describe('MSFT result'))
+      .toBeVisible({ timeout: 15000 });
   });
 
   await test.step("Clear and search by company name (Tesla)", async () => {
-    await agent.act('Clear the search input field and type "Tesla"', { page });
-    await page.waitForTimeout(2000);
+    const searchBox = page.getByPlaceholder(SEARCH_INPUT).describe('Search input');
+    await searchBox.fill('');
+    await searchBox.fill('Tesla');
 
-    // Verify Tesla appears in results
-    await expect(page).aiAssert(
-      'Search results show Tesla or TSLA as a match.',
-      { timeout: 60000 }
-    );
+    await expect(page.getByText(/TSLA|Tesla/i).first().describe('Tesla result'))
+      .toBeVisible({ timeout: 15000 });
   });
 });
