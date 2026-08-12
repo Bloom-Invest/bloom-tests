@@ -24,7 +24,7 @@ Set environment variables:
 ```bash
 export OPENROUTER_API_KEY="your_openrouter_key"   # required for grokAssert
 export BASE_URL="https://bloom.onrender.com"       # default; override for staging
-# Optional: export GROK_VISION_MODEL="x-ai/grok-4.5"
+# Optional: export VISION_MODEL="openai/gpt-5.6-luna"
 ```
 
 ## Running tests

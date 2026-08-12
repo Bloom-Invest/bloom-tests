@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { grokAssert } from '../helpers/grokAssert';
+import { aiAssert } from '../helpers/aiAssert';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 /**
@@ -53,5 +53,5 @@ await page.getByRole('link', { name: /AAPL/ }).describe('AAPL stock link').click
 
 await test.step("Assert that AAPL price information and a sparkline chart for 1M is shown to the user.", async () => {
 await dismissFeedbackModal(page);
-await grokAssert(page, `Assert that AAPL price information and a sparkline chart for 1M is shown to the user`, { timeout: 60000 });});
+await aiAssert(page, `Assert that AAPL price information and a sparkline chart for 1M is shown to the user`, { timeout: 60000 });});
 });

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { grokAssert } from '../helpers/grokAssert';
+import { aiAssert } from '../helpers/aiAssert';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 /**
@@ -103,6 +103,6 @@ await expect(page.getByRole('heading', { name: 'Magnificent 7' })).toBeVisible()
 await test.step("Click 'Options', then 'Delete portfolio'. Verify empty portfolio state.", async () => {
 await page.getByRole('button', { name: 'Options' }).click();
 await page.getByRole('menuitem', { name: 'Delete portfolio' }).click();
-await grokAssert(page, 'Assert there are no portfolios and we are on empty state.', { timeout: 60000 });
+await aiAssert(page, 'Assert there are no portfolios and we are on empty state.', { timeout: 60000 });
 });
 });
