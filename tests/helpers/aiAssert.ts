@@ -1,14 +1,15 @@
 import { Page, Locator, test } from '@playwright/test';
 
 /**
- * In-house replacement for Stably's `aiAssert`.
+ * Vision-backed visual assertion (in-house replacement for Stably's `aiAssert`).
  *
  * Takes a screenshot (locator-scoped when a locator is passed, else the
  * viewport, or the full page when `fullPage`), sends it to a vision model via
  * OpenRouter, and asserts on a structured `{ pass, reason }` verdict.
  *
- * Backend: OpenRouter `x-ai/grok-4.5` (supports image input; ~$0.001/call).
- * Requires env `OPENROUTER_API_KEY`. Optional override `GROK_VISION_MODEL`.
+ * Backend: OpenRouter `openai/gpt-5.6-luna` (supports image input).
+ * Requires env `OPENROUTER_API_KEY`. Optional override `VISION_MODEL`
+ * (legacy `GROK_VISION_MODEL` still honored).
  *
  * Transport errors (network/5xx/429) are retried; a genuine model verdict of
  * `pass:false` is re-polled (re-screenshot + re-judge) until the assertion
@@ -16,10 +17,11 @@ import { Page, Locator, test } from '@playwright/test';
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = process.env.GROK_VISION_MODEL || 'x-ai/grok-4.5';
+const MODEL =
+  process.env.VISION_MODEL || process.env.GROK_VISION_MODEL || 'openai/gpt-5.6-luna';
 const MAX_TRANSPORT_RETRIES = 2;
 
-export interface GrokAssertOptions {
+export interface AiAssertOptions {
   /** Total budget to keep polling (re-screenshot + re-judge) until the verdict passes. */
   timeout?: number;
   /** Per-OpenRouter-request abort timeout. Defaults to min(timeout, 30000). */
@@ -42,7 +44,7 @@ async function callVision(
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new Error(
-      'grokAssert: OPENROUTER_API_KEY is not set. Source ~/.hermes/.env or set it in CI secrets.',
+      'aiAssert: OPENROUTER_API_KEY is not set. Source ~/.hermes/.env or set it in CI secrets.',
     );
   }
 
@@ -157,10 +159,10 @@ function isVisionUnavailable(err: unknown): boolean {
  * Visual assertion. Throws (failing the test) when the model judges the
  * screenshot does not satisfy `prompt`.
  */
-export async function grokAssert(
+export async function aiAssert(
   page: Page,
   prompt: string,
-  options: GrokAssertOptions = {},
+  options: AiAssertOptions = {},
 ): Promise<void> {
   const { timeout = 60000, fullPage = false, locator } = options;
   const fetchTimeout = options.fetchTimeout ?? Math.min(timeout, 30000);
@@ -182,14 +184,14 @@ export async function grokAssert(
       const verdict = await callVision(imageB64, prompt, fetchTimeout);
       if (verdict.pass) {
         test.info().annotations.push({
-          type: 'grokAssert-pass',
+          type: 'aiAssert-pass',
           description: `${prompt.slice(0, 120)} :: ${verdict.reason.slice(0, 160)}`,
         });
         return;
       }
       // Genuine visual FAIL — remember it and re-poll (content may still render).
       lastFailure = new Error(
-        `grokAssert FAILED\n  Assertion: ${prompt}\n  Model reason: ${verdict.reason}`,
+        `aiAssert FAILED\n  Assertion: ${prompt}\n  Model reason: ${verdict.reason}`,
       );
     } catch (err) {
       // A vision-PROVIDER outage (dead/unfunded OpenRouter key: 401/402/403)
@@ -202,7 +204,7 @@ export async function grokAssert(
         const rawDetail = err instanceof Error ? err.message : String(err);
         const detail = rawDetail.replace('__VISION_UNAVAILABLE__ ', '');
         test.info().annotations.push({
-          type: 'grokAssert-vision-unavailable',
+          type: 'aiAssert-vision-unavailable',
           description:
             `Vision provider unavailable (key/billing); assertion soft-passed. ` +
             `Fix the OPENROUTER_API_KEY credits. Prompt: "${prompt.slice(0, 120)}" :: ` +
@@ -226,6 +228,6 @@ export async function grokAssert(
 
   throw (
     lastFailure ??
-    new Error(`grokAssert: no verdict within ${timeout}ms\n  Assertion: ${prompt}`)
+    new Error(`aiAssert: no verdict within ${timeout}ms\n  Assertion: ${prompt}`)
   );
 }

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { grokAssert } from '../helpers/grokAssert';
+import { aiAssert } from '../helpers/aiAssert';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 /**
@@ -59,7 +59,7 @@ test("Stock chart allows switching time periods", async ({ page }) => {
     await dismissFeedbackModal(page);
 
     // Use aiAssert to verify chart is displaying data and price is still visible
-    await grokAssert(page, 
+    await aiAssert(page, 
       'The stock page shows a price chart for AAPL with a visible stock price in dollars and a percentage change indicator.',
       { timeout: 60000, fullPage: true }
     );

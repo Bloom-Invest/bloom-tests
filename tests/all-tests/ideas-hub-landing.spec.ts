@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { grokAssert } from '../helpers/grokAssert';
+import { aiAssert } from '../helpers/aiAssert';
 
 /**
  * Test: Ideas hub landing page
@@ -34,7 +34,7 @@ test("Ideas hub shows trades, AI portfolios, and collections", async ({ page }) 
     await expect(seeAllCollections).toBeVisible({ timeout: 10000 });
     await seeAllCollections.click();
     await page.waitForTimeout(1000);
-    await grokAssert(page, 
+    await aiAssert(page, 
       'The page shows a list of investment collections or strategies with names like Low Cost ETFs, Magnificent 7, or similar.',
       { timeout: 60000 }
     );

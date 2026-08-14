@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { grokAssert } from '../helpers/grokAssert';
+import { aiAssert } from '../helpers/aiAssert';
 
 /**
  * Test: Empty states
@@ -20,7 +20,7 @@ test("Empty states display appropriate messages", async ({ page }) => {
     }
 
     // Use aiAssert — page may show watchlist or portfolios view depending on state
-    await grokAssert(page, 
+    await aiAssert(page, 
       'The page shows either a list of portfolios/watchlist stocks, or an empty state with an option to create a portfolio or add stocks.',
       { timeout: 60000 }
     );
@@ -31,7 +31,7 @@ test("Empty states display appropriate messages", async ({ page }) => {
     await page.waitForLoadState('domcontentloaded');
 
     // Use aiAssert — notifications page may show items or an empty/info state
-    await grokAssert(page, 
+    await aiAssert(page, 
       'The notifications page loaded successfully and shows either notification items with timestamps, or an empty state message.',
       { timeout: 60000 }
     );
