@@ -1,219 +1,31 @@
 import { test, expect } from '@playwright/test';
 import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
-// Headless Chromium reports Notification.permission as 'denied'. The notification
-// opt-in screen (bloom #2160) commits the default-on bundles even on "Skip"
-// (handleAlertsComplete), and useNotificationPreferences opens a blocking
-// "Notifications Blocked" modal whenever permission is strictly 'denied'. That
-// modal overlays the paywall and blocks every click after it. Granting the
-// permission up front keeps the flow on the happy path.
-test.use({ permissions: ['notifications'] });
+test('Navigate through onboarding flow', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await dismissFeedbackModal(page);
+  await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
 
-/**
- * Navigate through the redesigned Bloom onboarding flow from start to finish.
- * Flow: Welcome → Experience level → Stock selection → AI Moment →
- *       AI Arena → Notifications → Paywall (multi-step) → Result → Main app
- *
- * No afterAll cleanup needed: watchlist entries created during onboarding are
- * stored in localStorage, which is scoped to the test's browser context and
- * does not persist across runs.
- */
-test("Navigate through onboarding flow", async ({ page }) => {
+  await page.getByRole('button', { name: 'Get started' }).click();
+  await expect(page.getByText(/where are you in your investing journey/i)).toBeVisible();
+  await page.getByTestId('experience-option-casual').click();
 
-  await test.step("Navigate to the home page and verify the Get Started button is visible", async () => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveTitle(/Bloom/i);
-    const getStartedButton = page.getByRole('button', { name: 'Get started' });
-    await expect(getStartedButton).toBeVisible({ timeout: 15000 });
-  });
+  await expect(page.getByText('What are you following?')).toBeVisible();
+  await page.getByTestId('stock-row-AAPL').click();
+  await page.getByRole('button', { name: 'Show me Apple' }).click();
 
-  await test.step("Click 'Get started' and verify the experience level screen appears", async () => {
-    await page.getByRole('button', { name: 'Get started' }).click();
-    // New onboarding: "What kind of investor are you?"
-    await expect(page.getByText('What kind of investor are you?')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('New to investing')).toBeVisible();
-    await expect(page.getByText('Not sure yet? Skip this step')).toBeVisible();
-  });
+  await expect(page.getByTestId('turn-4-tool-row-stock')).toContainText('Received stock info', { timeout: 60000 });
+  await expect(page.getByTestId('turn-4-read-card')).toBeVisible({ timeout: 60000 });
+  await dismissFeedbackModal(page);
+  await page.getByRole('button', { name: 'Makes sense' }).click();
 
-  await test.step("Skip experience level selection", async () => {
-    await page.getByText('Not sure yet? Skip this step').click();
-  });
+  await expect(page.getByText(/Want me to keep watching AAPL/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Not now' }).click();
 
-  await test.step("Verify stock selection screen and pick stocks", async () => {
-    // New screen: "Pick a few stocks to follow."
-    await expect(page.getByText(/Pick a few stocks to follow/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByTestId('onboarding-plan-free')).toBeVisible();
+  await page.getByTestId('onboarding-plan-free').click();
+  await page.getByRole('button', { name: 'Continue with Free' }).click();
 
-    // Select a couple of stocks by clicking their buttons
-    const aaplBtn = page.getByRole('button', { name: /AAPL/ }).first();
-    try {
-      await aaplBtn.waitFor({ state: 'visible', timeout: 5000 });
-      await aaplBtn.click();
-    } catch {
-      // AAPL might not be in the list
-    }
-
-    const nvdaBtn = page.getByRole('button', { name: /NVDA/ }).first();
-    try {
-      await nvdaBtn.waitFor({ state: 'visible', timeout: 3000 });
-      await nvdaBtn.click();
-    } catch {
-      // NVDA might not be in the list
-    }
-
-    // Click the follow/add button to proceed
-    const followBtn = page.locator('button').filter({ hasText: /Follow \d+ stock|Add to my watchlist/i }).first();
-    try {
-      await followBtn.waitFor({ state: 'visible', timeout: 3000 });
-      await followBtn.click();
-    } catch {
-      // If no stocks selected, use the skip link
-      try {
-        const skipBtn = page.getByText(/Skip.*I'll add stocks later/i);
-        await skipBtn.waitFor({ state: 'visible', timeout: 3000 });
-        await skipBtn.click();
-      } catch {
-        // No skip link either, proceed
-      }
-    }
-  });
-
-  await test.step("Handle AI Moment screen", async () => {
-    // Screen 3: AI moment - heading is "Try asking Bloom about <ticker>"
-    // (onboarding.aiMomentTitle) or "Try asking Bloom" (aiMomentTitleDefault
-    // when no ticker was picked). Was "Here's what Bloom sees" before the copy change.
-    await expect(page.getByRole('heading', { name: /Try asking Bloom/i })).toBeVisible({ timeout: 15000 });
-
-    // Click Continue to proceed
-    const continueBtn = page.getByRole('button', { name: 'Continue' });
-    await expect(continueBtn).toBeVisible({ timeout: 30000 });
-    await continueBtn.click();
-  });
-
-  await test.step("Handle AI Arena teaser screen", async () => {
-    // Screen 4: AI Arena - "Our AI portfolio managers beat the market"
-    await expect(page.getByRole('heading', { name: /AI portfolio managers/i })).toBeVisible({ timeout: 10000 });
-
-    const continueBtn = page.getByRole('button', { name: 'Continue' });
-    await expect(continueBtn).toBeVisible({ timeout: 5000 });
-    await continueBtn.click();
-  });
-
-  await test.step("Handle notifications screen", async () => {
-    // Screen 5: Notifications. The title is conditional on whether a stock was
-    // picked earlier: "Get alerted when <ticker> moves" (onboarding.slideTitle6Alerts)
-    // when there is a topSymbol, else "What should we tell you about?"
-    // (onboarding.slideTitle4). This test skips stock selection, so the no-ticker
-    // title is the one that normally renders — but accept either, since selection
-    // can succeed depending on seeded data.
-    // Was "Stay informed" before #2160 replaced the notification opt-in screen.
-    await expect(
-      page.getByText(/Get alerted when.*moves|What should we tell you about/i)
-    ).toBeVisible({ timeout: 10000 });
-
-    // Skip alerts
-    const skipBtn = page.getByText(/Skip.*I'll set up alerts later/i);
-    try {
-      await skipBtn.waitFor({ state: 'visible', timeout: 3000 });
-      await skipBtn.click();
-    } catch {
-      // Try the main button if skip link isn't visible
-      try {
-        const finishBtn = page.getByRole('button', { name: /Finish setup/i });
-        await finishBtn.waitFor({ state: 'visible', timeout: 3000 });
-        await finishBtn.click();
-      } catch {
-        // No finish button either, proceed
-      }
-    }
-  });
-
-  await test.step("Dismiss 'Notifications Blocked' modal if shown", async () => {
-    // Safety net: if the permission grant above ever stops covering it, this
-    // modal overlays the paywall and blocks all clicks. Close it via Cancel.
-    const blockedHeading = page.getByRole('heading', { name: 'Notifications Blocked' });
-    try {
-      await blockedHeading.waitFor({ state: 'visible', timeout: 3000 });
-      await page.getByRole('button', { name: 'Cancel' }).click();
-    } catch {
-      // Modal never appeared (expected when the notifications permission is granted)
-    }
-  });
-
-  await test.step("Handle paywall - navigate through to 'Explore free'", async () => {
-    // After notifications, the "Unlock Bloom Pro" paywall modal appears.
-    // Step 1 only has "Continue" (no "Explore free"). Click Continue to get to step 2.
-    // Step 2 shows pricing with "Explore free" below.
-
-    // Step 1: Click "Continue" on the feature showcase.
-    // exact: true is required here: the notifications slide stays mounted
-    // beneath the paywall, and its "Daily briefing" bundle toggle's accessible
-    // name contains "…Tech rally continues — S&P +1.2%", which substring-matches
-    // name: 'Continue' and triggers a strict mode violation.
-    const continueBtn = page.getByRole('button', { name: 'Continue', exact: true });
-    try {
-      await continueBtn.waitFor({ state: 'visible', timeout: 10000 });
-      await continueBtn.click();
-    } catch {
-      // Continue button not found
-    }
-
-    // Step 2: Click "Explore free" on the pricing screen
-    const exploreFree = page.locator('button').filter({ hasText: /^Explore free$/i }).first();
-    try {
-      await exploreFree.waitFor({ state: 'visible', timeout: 10000 });
-      await exploreFree.scrollIntoViewIfNeeded();
-      await exploreFree.click();
-    } catch {
-      // Explore free not found, try scrolling
-      await page.keyboard.press('End');
-      try {
-        await exploreFree.waitFor({ state: 'visible', timeout: 3000 });
-        await exploreFree.click();
-      } catch {
-        // Still not found
-      }
-    }
-  });
-
-  await test.step("Dismiss one-time offer if shown", async () => {
-    // After clicking "Explore free", a one-time offer may appear
-    const exploreFreeVersion = page.locator('button, a, [role="button"]').filter({ hasText: /explore free version/i }).first();
-    try {
-      await exploreFreeVersion.waitFor({ state: 'visible', timeout: 5000 });
-      await exploreFreeVersion.click();
-    } catch {
-      // No one-time offer
-    }
-  });
-
-  await test.step("Handle 'You're all set!' result page", async () => {
-    // After paywall dismissal, lands on result page with "Open Bloom"
-    const openBloomBtn = page.getByRole('button', { name: /Open Bloom/i });
-    try {
-      await openBloomBtn.waitFor({ state: 'visible', timeout: 5000 });
-      await openBloomBtn.click();
-    } catch {
-      // Not on result page, might have gone straight to app
-    }
-  });
-
-  await test.step("Dismiss the 'Tap anywhere to continue' overlay", async () => {
-    try {
-      const tapOverlay = page.getByText('Tap anywhere to continue');
-      await tapOverlay.waitFor({ state: 'visible', timeout: 5000 });
-      await tapOverlay.click();
-    } catch {
-      // No overlay
-    }
-  });
-
-  await test.step("Dismiss feedback modal if shown", async () => {
-    await dismissFeedbackModal(page);
-  });
-
-  await test.step("Verify landing on the main app with navigation bar", async () => {
-    // Should be on the main app with navigation links
-    await expect(page.getByRole('link', { name: 'Portfolio' })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('link', { name: 'Chat' })).toBeVisible();
-  });
+  await expect(page.getByText(/You're in.*this thread is where we keep talking/i)).toBeVisible();
+  await expect(page.getByText('AAPL watched · alerts off · Free plan')).toBeVisible();
 });
