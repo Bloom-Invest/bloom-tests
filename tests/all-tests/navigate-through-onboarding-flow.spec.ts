@@ -13,7 +13,7 @@ test('Navigate through onboarding flow', async ({ page }) => {
   await expect(page.getByText(/where are you in your investing journey/i)).toBeVisible();
   await page.getByTestId('experience-option-casual').click();
 
-  await expect(page.getByText('What are you following?')).toBeVisible();
+  await expect(page.getByText(/what stocks are you following/i)).toBeVisible();
   await page.getByTestId('stock-row-AAPL').click();
   // Match on the CTA verb, not the company name: the API returns an empty name
   // for some symbols (AGENTS.md pitfall 7) and the label falls back to the ticker.
@@ -33,6 +33,10 @@ test('Navigate through onboarding flow', async ({ page }) => {
   await page.getByRole('button', { name: 'Continue with Free' }).click();
 
   await dismissFeedbackModal(page);
+  // Turn 7 asks for WhatsApp opt-in before the app takes over. Scope the click
+  // to the Turn 7 region: 'Not now' is also the Turn 5 watch prompt above.
+  await page.getByRole('region', { name: 'Turn 7' }).getByRole('button', { name: 'Not now' }).click();
+
   // Onboarding hands off to the app: the nav bar is the durable end state.
   // The closing thread copy is not, the app can land on the portfolio view
   // with its own overlay instead.

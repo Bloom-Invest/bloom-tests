@@ -20,6 +20,7 @@ test('Free onboarding grants access to content', async ({ page }) => {
   await page.getByRole('button', { name: 'Continue with Free' }).click();
 
   await dismissFeedbackModal(page);
+  await page.getByRole('region', { name: 'Turn 7' }).getByRole('button', { name: 'Not now' }).click();
   await expect(page.getByRole('link', { name: 'Portfolio' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Ideas' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Markets' })).toBeVisible();
