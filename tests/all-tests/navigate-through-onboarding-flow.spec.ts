@@ -19,7 +19,7 @@ test('Navigate through onboarding flow', async ({ page }) => {
   // for some symbols (AGENTS.md pitfall 7) and the label falls back to the ticker.
   await page.getByRole('button', { name: /^Show me / }).click();
 
-  await expect(page.getByTestId('turn-4-tool-row-stock')).toContainText('Received stock info', { timeout: 60000 });
+  await expect(page.getByRole('button', { name: /Researched \d+ sources/ })).toBeVisible({ timeout: 60000 });
   await expect(page.getByTestId('turn-4-read-card')).toBeVisible({ timeout: 60000 });
   await dismissFeedbackModal(page);
   await page.getByRole('button', { name: 'Makes sense' }).click();
@@ -33,9 +33,9 @@ test('Navigate through onboarding flow', async ({ page }) => {
   await page.getByRole('button', { name: 'Continue with Free' }).click();
 
   await dismissFeedbackModal(page);
-  // Turn 7 asks for WhatsApp opt-in before the app takes over. Scope the click
-  // to the Turn 7 region: 'Not now' is also the Turn 5 watch prompt above.
-  await page.getByRole('region', { name: 'Turn 7' }).getByRole('button', { name: 'Not now' }).click();
+  // Turn 7 asks for WhatsApp opt-in before the app takes over. Turn 5's 'Not now'
+  // is already consumed and renders as plain text, so this is the only button.
+  await page.getByRole('button', { name: 'Not now' }).click();
 
   // Onboarding hands off to the app: the nav bar is the durable end state.
   // The closing thread copy is not, the app can land on the portfolio view
