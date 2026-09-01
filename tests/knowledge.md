@@ -1072,3 +1072,6 @@ On the updated 'Add new portfolio' page, the instruction text reads 'Give your p
 
 ---
 
+Market News article timestamps use the full relative ladder from `formatRelativeTime` in `frontend/src/components/MarketNewsList/index.tsx`: 'just now' (under 1 min), '5m ago', '3h ago', 'yesterday' (exactly 1 day), '2d ago', '3w ago', '2mo ago'. A selector that only matches hours and days silently matches nothing on a weekday morning, when every headline is minutes old. Run 33495629555 failed all three attempts this way while the app was healthy: all 29 rendered article buttons read 'Nm ago' or 'just now'.
+
+---

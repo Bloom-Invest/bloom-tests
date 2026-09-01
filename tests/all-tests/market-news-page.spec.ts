@@ -25,13 +25,15 @@ test("Market News page displays news articles and expands on click", async ({ pa
   });
 
   await test.step("Verify at least one news article is visible", async () => {
-    // News articles are div[role="button"] elements containing a timestamp span
-    const newsArticles = page.locator('div[role="button"]').filter({ hasText: /\d+[hdmw] ago|yesterday/i });
+    // News articles are div[role="button"] elements containing a timestamp span.
+    // Match the full ladder emitted by formatRelativeTime (MarketNewsList):
+    // "just now" and "2mo ago" were both missed by the old [hdmw] class.
+    const newsArticles = page.locator('div[role="button"]').filter({ hasText: /\d+(m|h|d|w|mo) ago|just now|yesterday/i });
     await expect(newsArticles.first()).toBeVisible({ timeout: 10000 });
   });
 
   await test.step("Click on a news article and verify it opens", async () => {
-    const firstArticle = page.locator('div[role="button"]').filter({ hasText: /\d+[hdmw] ago|yesterday/i }).first();
+    const firstArticle = page.locator('div[role="button"]').filter({ hasText: /\d+(m|h|d|w|mo) ago|just now|yesterday/i }).first();
     const articleText = await firstArticle.textContent();
     expect(articleText?.length).toBeGreaterThan(10);
     await firstArticle.click();
