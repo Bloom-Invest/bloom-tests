@@ -83,9 +83,15 @@ test("Markets page displays market data with stock prices and percentage changes
     // Verify the "All News" link is present
     await expect(page.getByRole('link', { name: /All News/ })).toBeVisible();
 
-    // Verify at least one news article is displayed
-    // News articles are buttons with accessible names containing timestamps like "3h ago", "2d ago", "yesterday"
-    const firstNewsArticle = page.getByRole('button', { name: /\d+[hd] ago|yesterday/ }).first();
+    // Verify at least one news article is displayed.
+    // Each article button ends with a relative timestamp. formatRelativeTime in
+    // frontend/src/components/MarketNewsList/index.tsx emits the full ladder:
+    // "just now", "5m ago", "3h ago", "yesterday", "2d ago", "3w ago", "2mo ago".
+    // Matching only [hd] made this step fail whenever every headline was under an
+    // hour old, which is the normal state on a weekday morning. Match the ladder.
+    const firstNewsArticle = page
+      .getByRole('button', { name: /\d+(m|h|d|w|mo) ago|just now|yesterday/i })
+      .first();
     await firstNewsArticle.scrollIntoViewIfNeeded();
     await expect(firstNewsArticle).toBeVisible();
   });
