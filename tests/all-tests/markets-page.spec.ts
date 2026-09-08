@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 /**
  * User Prompt:
@@ -7,43 +8,35 @@ import { test, expect } from '@playwright/test';
  * that stock prices or percentage changes are visible.
  */
 test("Markets page displays market data with stock prices and percentage changes", async ({ page }) => {
-  await test.step("Navigate to the Markets page", async () => {
+  await test.step("Prepare and navigate to the Markets page", async () => {
+    await page.addInitScript(() => {
+      localStorage.setItem('hasCompletedOnboarding', 'true');
+      localStorage.setItem('hasSeenTabOnboarding', 'true');
+    });
     await page.goto('/markets', { waitUntil: 'domcontentloaded' });
 
-    // Handle subscription overlay if it appears
-    const exploreBtn = page.getByRole('button', { name: 'Explore free' });
-    const closeBtn = page.getByRole('button', { name: 'Close' });
+    // Only dismiss known overlays. A generic `Close` locator can match a
+    // control inside Market News; its click bubbles to the article and opens Chat.
+    const exploreBtn = page.getByRole('button', { name: /^Explore free$/i });
     try {
       await exploreBtn.waitFor({ state: 'visible', timeout: 5000 });
+      await exploreBtn.scrollIntoViewIfNeeded();
       await exploreBtn.click();
-      // If redirected away, navigate back
       if (!page.url().includes('/markets')) {
-        // Dismiss any tutorial overlay
-        const tapOverlay = page.getByText('Tap anywhere to continue');
-        try {
-          await tapOverlay.waitFor({ state: 'visible', timeout: 2000 });
-          await tapOverlay.click();
-        } catch {
-          // No tutorial overlay
-        }
         await page.goto('/markets', { waitUntil: 'domcontentloaded' });
       }
     } catch {
-      try {
-        await closeBtn.waitFor({ state: 'visible', timeout: 2000 });
-        await closeBtn.click();
-      } catch {
-        // No overlay at all
-      }
+      // No subscription overlay.
     }
 
-    // Dismiss notification CTA if present
+    await dismissFeedbackModal(page);
+
     const dismissBtn = page.getByRole('button', { name: 'Dismiss notification CTA' });
     try {
       await dismissBtn.waitFor({ state: 'visible', timeout: 3000 });
       await dismissBtn.click();
     } catch {
-      // No notification CTA
+      // No notification CTA.
     }
   });
 
