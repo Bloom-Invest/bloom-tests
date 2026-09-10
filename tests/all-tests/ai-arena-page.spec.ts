@@ -49,9 +49,9 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
   await test.step("Verify three AI portfolio managers are displayed with performance data", async () => {
     await dismissFeedbackModal(page);
 
-    // Match the model cards by their stable brand prefix (GPT / Gemini / Opus),
+    // Match the model cards by their stable brand prefix (GPT / Gemini / Fable),
     // NOT the version number — Bloom bumps the arena model versions often
-    // (GPT 5.2 -> 5.5 -> 5.6 Sol, Opus 4.7 -> 4.8, ...) and pinning the exact
+    // (GPT 5.2 -> 5.5 -> 5.6 Sol, Opus -> Fable, ...) and pinning the exact
     // version silently breaks this test on every rename. The `.*YTD` / `.*%`
     // suffix keeps the card disambiguated from the bare chart-legend button.
     const gptCard = page.getByRole('button', { name: /GPT.*YTD/ });
@@ -63,10 +63,10 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
     await expect(geminiCard).toBeVisible();
     await expect(geminiCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
 
-    // Verify Opus card
-    const opusCard = page.getByRole('button', { name: /Opus.*%/ });
-    await expect(opusCard).toBeVisible();
-    await expect(opusCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
+    // Verify Fable card (the current Claude portfolio name from the Arena API)
+    const fableCard = page.getByRole('button', { name: /Fable.*%/ });
+    await expect(fableCard).toBeVisible();
+    await expect(fableCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
   });
 
   await test.step("Verify the Performance History chart section is visible", async () => {
@@ -86,7 +86,7 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
     // each brand appears in >=2 places. Match on brand prefix, not version.
     expect(await page.getByText(/GPT/).count()).toBeGreaterThanOrEqual(2);
     expect(await page.getByText(/Gemini/).count()).toBeGreaterThanOrEqual(2);
-    expect(await page.getByText(/Opus/).count()).toBeGreaterThanOrEqual(2);
+    expect(await page.getByText(/Fable/).count()).toBeGreaterThanOrEqual(2);
   });
 
   await test.step("Click on an AI portfolio manager and verify it becomes selected", async () => {
