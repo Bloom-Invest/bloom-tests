@@ -8,6 +8,11 @@ import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
  * portfolio managers or strategies and verify details are shown.
  */
 test("AI Arena page displays AI portfolio managers and shows details on selection", async ({ page }) => {
+  const portfoliosResponse = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === '/api/portfolios' && response.request().method() === 'GET'
+  );
+  const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  let managers: { id: string; name: string }[];
   await test.step("Navigate to the AI Arena page and dismiss any overlays", async () => {
     await page.goto('/ideas/ai-arena', { waitUntil: 'domcontentloaded' });
 
@@ -49,24 +54,23 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
   await test.step("Verify three AI portfolio managers are displayed with performance data", async () => {
     await dismissFeedbackModal(page);
 
-    // Match the model cards by their stable brand prefix (GPT / Gemini / Opus),
-    // NOT the version number — Bloom bumps the arena model versions often
-    // (GPT 5.2 -> 5.5 -> 5.6 Sol, Opus 4.7 -> 4.8, ...) and pinning the exact
-    // version silently breaks this test on every rename. The `.*YTD` / `.*%`
-    // suffix keeps the card disambiguated from the bare chart-legend button.
-    const gptCard = page.getByRole('button', { name: /GPT.*YTD/ });
-    await expect(gptCard).toBeVisible();
-    await expect(gptCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
-
-    // Verify Gemini card
-    const geminiCard = page.getByRole('button', { name: /Gemini.*%/ });
-    await expect(geminiCard).toBeVisible();
-    await expect(geminiCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
-
-    // Verify Opus card
-    const opusCard = page.getByRole('button', { name: /Opus.*%/ });
-    await expect(opusCard).toBeVisible();
-    await expect(opusCard.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
+    const response = await portfoliosResponse;
+    expect(response.ok()).toBeTruthy();
+    const portfolios: { id: string; name: string }[] = await response.json();
+    // These three provider IDs are always visible; model names are API-owned.
+    managers = ['openai', 'gemini', 'claude'].map((id) => {
+      const portfolio = portfolios.find((item) => item.id === id);
+      expect(portfolio, `Missing Arena portfolio ${id}`).toBeDefined();
+      expect(portfolio!.name).toBeTruthy();
+      return portfolio!;
+    });
+    for (const manager of managers) {
+      const card = page.getByRole('button', {
+        name: new RegExp(`${escapeRegex(manager.name)}.*(?:YTD|All-time)`),
+      });
+      await expect(card).toBeVisible();
+      await expect(card.getByText(/[+-]?\d+\.\d+%/)).toBeVisible();
+    }
   });
 
   await test.step("Verify the Performance History chart section is visible", async () => {
@@ -80,29 +84,35 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
     await expect(page.getByRole('button', { name: 'YTD', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'ALL', exact: true })).toBeVisible();
 
-    // Verify chart legend shows all three AI managers with performance percentages
-    // Each name appears in card, chart legend, and Portfolio Breakdown tab
-    // Chart legend + Portfolio Breakdown tab each repeat the manager names, so
-    // each brand appears in >=2 places. Match on brand prefix, not version.
-    expect(await page.getByText(/GPT/).count()).toBeGreaterThanOrEqual(2);
-    expect(await page.getByText(/Gemini/).count()).toBeGreaterThanOrEqual(2);
-    expect(await page.getByText(/Opus/).count()).toBeGreaterThanOrEqual(2);
+    // Each live manager name must also appear in the Portfolio Breakdown tabs.
+    const breakdown = page.locator('section').filter({
+      has: page.getByRole('heading', { name: 'Portfolio Breakdown', exact: true }),
+    });
+    for (const manager of managers) {
+      await expect(breakdown.getByRole('button', { name: manager.name, exact: true })).toBeVisible();
+    }
   });
 
-  await test.step("Click on an AI portfolio manager and verify it becomes selected", async () => {
+  await test.step("Select a manager and verify its portfolio details load", async () => {
     await dismissFeedbackModal(page);
-    // Click on the GPT card (its YTD label disambiguates from the Portfolio Breakdown tab)
-    const gptCard = page.getByRole('button', { name: /GPT.*YTD/ });
-    await gptCard.click();
-
-    // Verify the card is still visible after clicking
-    await expect(gptCard).toBeVisible();
-  });
-
-  await test.step("Verify Portfolio Breakdown section is visible", async () => {
-    await dismissFeedbackModal(page);
-    await expect(page.getByRole('heading', { name: 'Portfolio Breakdown' })).toBeVisible();
-    // Verify at least one AI manager tab is visible in the Portfolio Breakdown section
-    await expect(page.getByRole('button', { name: /GPT/ }).first()).toBeVisible();
+    const manager = managers.find((item) => item.id === 'openai')!;
+    const breakdown = page.locator('section').filter({
+      has: page.getByRole('heading', { name: 'Portfolio Breakdown', exact: true }),
+    });
+    const positionsResponse = page.waitForResponse((response) =>
+      new URL(response.url()).pathname === `/api/portfolio/${manager.id}/positions`
+    );
+    await breakdown.getByRole('button', { name: manager.name, exact: true }).click();
+    const response = await positionsResponse;
+    expect(response.ok()).toBeTruthy();
+    const positions: { symbol: string }[] = await response.json();
+    await breakdown.getByRole('button', { name: 'Open', exact: true }).click();
+    await expect(breakdown.getByRole('button', { name: 'Open', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    if (positions.length) {
+      await expect(breakdown.getByRole('button', { name: `Copy ${manager.name} Portfolio`, exact: true })).toBeVisible();
+    } else {
+      await expect(breakdown.getByText('No positions available')).toBeVisible();
+    }
+    await page.screenshot({ path: test.info().outputPath('arena-selected.png'), fullPage: true });
   });
 });
