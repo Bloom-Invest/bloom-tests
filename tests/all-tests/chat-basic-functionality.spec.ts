@@ -74,8 +74,9 @@ test("Chat page allows sending messages and receiving AI responses", async ({ pa
   });
 
   await test.step("Verify message counter decremented", async () => {
-    // Should show "2 / 3 free messages left today" or similar (use global timeout, not 5s)
-    const counter = page.locator('text=/\\d+\\s*\\/\\s*\\d+\\s*free message/i').describe('Message counter');
+    const counter = page.getByTestId('chat-composer-dock')
+      .getByLabel('2 / 3 free messages left today', { exact: true });
     await expect(counter).toBeVisible();
+    await expect(counter).toHaveText('2 left');
   });
 });

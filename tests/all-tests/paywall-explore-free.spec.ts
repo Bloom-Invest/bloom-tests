@@ -12,15 +12,13 @@ test('Free onboarding grants access to content', async ({ page }) => {
   await page.getByRole('button', { name: /^Show me / }).click();
   await expect(page.getByTestId('turn-4-read-card')).toContainText('AAPL', { timeout: 60000 });
   await dismissFeedbackModal(page);
-  await page.getByRole('button', { name: 'Makes sense' }).click();
+  await page.getByRole('button', { name: 'Continue setup' }).click();
   await page.getByRole('button', { name: 'Not now' }).click();
 
   await dismissFeedbackModal(page);
-  await page.getByTestId('onboarding-plan-free').click();
-  await page.getByRole('button', { name: 'Continue with Free' }).click();
+  await page.getByTestId('onboarding-continue-free').click();
 
   await dismissFeedbackModal(page);
-  await page.getByRole('button', { name: 'Not now' }).click();
   await expect(page.getByRole('link', { name: 'Portfolio' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Ideas' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Markets' })).toBeVisible();
