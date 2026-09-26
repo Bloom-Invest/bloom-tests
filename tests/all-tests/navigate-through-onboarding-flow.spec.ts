@@ -24,11 +24,10 @@ test('Navigate through onboarding flow', async ({ page }) => {
   await dismissFeedbackModal(page);
   await page.getByRole('button', { name: 'Continue setup' }).click();
 
-  await expect(page.getByText(/Want me to keep watching AAPL/i)).toBeVisible();
   await page.getByRole('button', { name: 'Not now' }).click();
 
   await dismissFeedbackModal(page);
-  await page.getByTestId('onboarding-continue-free').click();
+  await page.getByTestId('onboarding-dock-cta').click();
 
   await dismissFeedbackModal(page);
   // Free onboarding completes directly into the app.

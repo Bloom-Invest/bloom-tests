@@ -16,7 +16,7 @@ test('Free onboarding grants access to content', async ({ page }) => {
   await page.getByRole('button', { name: 'Not now' }).click();
 
   await dismissFeedbackModal(page);
-  await page.getByTestId('onboarding-continue-free').click();
+  await page.getByTestId('onboarding-dock-cta').click();
 
   await dismissFeedbackModal(page);
   await expect(page.getByRole('link', { name: 'Portfolio' })).toBeVisible();

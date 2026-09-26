@@ -9,10 +9,10 @@ import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
  * (see frontend/src/index.tsx: `<Route path="/search" ... Redirect to="/ideas/collections" />`).
  * The live search input lives on the Ideas page (`/ideas`), rendered by
  * frontend/src/components/Search/index.tsx as a plain
- * `<input placeholder="Search stocks or crypto">`. No login required.
+ * `<input placeholder="Search stocks & ETFs">`. No login required.
  */
 
-const SEARCH_INPUT = 'Search stocks or crypto';
+const SEARCH_INPUT = 'Search stocks & ETFs';
 
 test("Search returns relevant results for ticker and company name queries", async ({ page }) => {
   await test.step("Navigate to the Ideas page (hosts the search bar)", async () => {
