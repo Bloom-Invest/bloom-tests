@@ -27,7 +27,7 @@ test("Bottom navigation routes to correct pages", async ({ page }) => {
       await expect(page).toHaveURL(/\/search\?view=ideas/);
       await page.getByRole('group', { name: 'Search views' }).getByRole('button', { name: 'Markets' }).click();
       await expect(page).toHaveURL(/\/search\?view=markets/);
-      await expect(page.getByRole('button', { name: 'Markets' })).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.getByRole('button', { name: 'Markets', exact: true })).toHaveAttribute('aria-pressed', 'true');
     } else {
       await nav.getByRole('link', { name: 'Ideas', exact: true }).click();
       await expect(page).toHaveURL(/\/ideas/);
