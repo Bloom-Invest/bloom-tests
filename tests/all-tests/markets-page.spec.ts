@@ -41,7 +41,14 @@ test("Markets page displays market data with stock prices and percentage changes
   });
 
   await test.step("Verify the Markets page heading and Market Pulse section are visible", async () => {
-    await expect(page.getByRole('heading', { name: 'Markets', level: 1 })).toBeVisible();
+    if (new URL(page.url()).pathname === '/search') {
+      await expect(page).toHaveURL(/\/search\?view=markets/);
+      await expect(page.getByRole('heading', { name: 'Search', level: 1 })).toBeVisible();
+      await expect(page.getByRole('group', { name: 'Search views' }).getByRole('button', { name: 'Markets' }))
+        .toHaveAttribute('aria-pressed', 'true');
+    } else {
+      await expect(page.getByRole('heading', { name: 'Markets', level: 1 })).toBeVisible();
+    }
     await expect(page.getByRole('heading', { name: 'Market Pulse', level: 2 })).toBeVisible();
   });
 
@@ -60,14 +67,15 @@ test("Markets page displays market data with stock prices and percentage changes
 
     // The treemap renders one of two states:
     //   1. On a trading day: stock entries with percentage changes like "+65.3%" / "-17.6%"
-    //   2. Outside market hours / on weekends: a "No market data available" placeholder
+    //   2. Outside market hours / on weekends: a "No movers for this period" placeholder
     // Either is a valid render of the section, so accept both.
     const movers = page.getByText(/[+-]\d+\.\d+%/).first();
-    const noData = page.getByText(/No market data available/i);
+    const noData = page.getByText(/No movers for this period/i);
     await expect(movers.or(noData)).toBeVisible();
   });
 
-  await test.step("Scroll down and verify the Market News section is visible with articles", async () => {
+  await test.step("Verify Market News on the legacy Markets page", async () => {
+    if (new URL(page.url()).pathname === '/search') return;
     // Scroll to reveal the Market News section
     const marketNewsHeading = page.getByRole('heading', { name: 'Market News', level: 2 });
     await marketNewsHeading.scrollIntoViewIfNeeded();

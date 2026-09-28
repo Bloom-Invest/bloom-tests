@@ -36,10 +36,11 @@ test("Stock chart allows switching time periods", async ({ page }) => {
 
   await test.step("Verify chart time period buttons are visible", async () => {
     await dismissFeedbackModal(page);
+    const timeRanges = page.getByRole('radiogroup');
+    await expect(timeRanges).toBeVisible({ timeout: 30000 });
     const timePeriods = ['1D', '1W', '1M', '3M', '1Y', '5Y'];
     for (const period of timePeriods) {
-      const btn = page.locator('[role="radiogroup"] label, button, [role="button"]').filter({ hasText: new RegExp(`^${period}$`) }).first();
-      await expect(btn).toBeVisible({ timeout: 5000 });
+      await expect(timeRanges.getByText(period, { exact: true })).toBeVisible();
     }
   });
 
@@ -47,14 +48,15 @@ test("Stock chart allows switching time periods", async ({ page }) => {
     await dismissFeedbackModal(page);
 
     // Click 1Y
-    await page.locator('[role="radiogroup"] label, button, [role="button"]').filter({ hasText: /^1Y$/ }).first().click();
-    await page.waitForTimeout(1000);
+    const timeRanges = page.getByRole('radiogroup');
+    await timeRanges.getByText('1Y', { exact: true }).click();
+    await expect(timeRanges.locator('input[value="1y"]')).toBeChecked();
 
     await dismissFeedbackModal(page);
 
     // Click 1D
-    await page.locator('[role="radiogroup"] label, button, [role="button"]').filter({ hasText: /^1D$/ }).first().click();
-    await page.waitForTimeout(1000);
+    await timeRanges.getByText('1D', { exact: true }).click();
+    await expect(timeRanges.locator('input[value="1d"]')).toBeChecked();
 
     await dismissFeedbackModal(page);
 

@@ -44,7 +44,7 @@ test.afterAll(async ({ browser }) => {
 
 test("Assert portfolio features around add, edit, and delete work fine", async ({ page }) => {
 await test.step("Create a portfolio from the Magnificent 7 collection.", async () => {
-await page.goto('/search', { waitUntil: 'domcontentloaded' });
+await page.goto('/ideas/collections', { waitUntil: 'domcontentloaded' });
 await page.waitForLoadState('domcontentloaded');
 await dismissFeedbackModal(page);
 await page.getByRole('link', { name: /Magnificent 7/ }).describe('Magnificent 7 collection card').click();

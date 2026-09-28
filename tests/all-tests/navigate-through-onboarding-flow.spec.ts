@@ -24,15 +24,15 @@ test('Navigate through onboarding flow', async ({ page }) => {
   await dismissFeedbackModal(page);
   await page.getByRole('button', { name: 'Continue setup' }).click();
 
-  await expect(page.getByText(/Want me to keep watching AAPL/i)).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Turn 5' })).toContainText('AAPL');
   await page.getByRole('button', { name: 'Not now' }).click();
 
   await dismissFeedbackModal(page);
-  await page.getByTestId('onboarding-continue-free').click();
+  await page.getByRole('button', { name: 'Continue with Free' }).click();
 
   await dismissFeedbackModal(page);
   // Free onboarding completes directly into the app.
   await expect(page.getByRole('link', { name: 'Portfolio' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Markets' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^(Search|Ideas)$/ })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Chat' })).toBeVisible();
 });

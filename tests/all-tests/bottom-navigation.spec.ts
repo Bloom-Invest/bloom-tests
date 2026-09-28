@@ -13,40 +13,42 @@ test("Bottom navigation routes to correct pages", async ({ page }) => {
     try {
       await exploreFree.waitFor({ state: 'visible', timeout: 5000 });
       await exploreFree.click();
-      await page.waitForTimeout(500);
     } catch {
       // Paywall not present
     }
   });
 
-  await test.step("Tap Ideas tab and verify navigation", async () => {
-    await page.locator('a').filter({ hasText: /^Ideas$/ }).describe('Ideas nav tab').click();
-    await page.waitForTimeout(1000);
-    await expect(page).toHaveURL(/\/ideas/);
-  });
-
-  await test.step("Tap Markets tab and verify navigation", async () => {
-    await page.locator('a').filter({ hasText: /^Markets$/ }).describe('Markets nav tab').click();
-    await page.waitForTimeout(1000);
-    await expect(page).toHaveURL(/\/markets/);
+  await test.step("Tap discovery tabs and verify navigation", async () => {
+    const nav = page.getByRole('navigation', { name: 'Primary' });
+    if (await nav.getByRole('link', { name: 'Feed', exact: true }).isVisible()) {
+      await nav.getByRole('link', { name: 'Feed', exact: true }).click();
+      await expect(page).toHaveURL(/\/feed(?:\?|$)/);
+      await nav.getByRole('link', { name: 'Search', exact: true }).click();
+      await expect(page).toHaveURL(/\/search\?view=ideas/);
+      await page.getByRole('group', { name: 'Search views' }).getByRole('button', { name: 'Markets' }).click();
+      await expect(page).toHaveURL(/\/search\?view=markets/);
+      await expect(page.getByRole('button', { name: 'Markets' })).toHaveAttribute('aria-pressed', 'true');
+    } else {
+      await nav.getByRole('link', { name: 'Ideas', exact: true }).click();
+      await expect(page).toHaveURL(/\/ideas/);
+      await nav.getByRole('link', { name: 'Markets', exact: true }).click();
+      await expect(page).toHaveURL(/\/markets/);
+    }
   });
 
   await test.step("Tap Chat tab and verify navigation", async () => {
-    await page.locator('a').filter({ hasText: /^Chat$/ }).describe('Chat nav tab').click();
-    await page.waitForTimeout(1000);
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Chat' }).click();
     await expect(page).toHaveURL(/\/chat/);
     await expect(page.getByRole('textbox').describe('Chat input')).toBeVisible({ timeout: 10000 });
   });
 
   await test.step("Tap Settings/More tab and verify navigation", async () => {
-    await page.locator('a').filter({ hasText: /^(Settings|More)$/ }).describe('Settings/More nav tab').click();
-    await page.waitForTimeout(1000);
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: /^(Settings|More)$/ }).click();
     await expect(page).toHaveURL(/\/more/);
   });
 
   await test.step("Tap Portfolio tab and verify navigation back", async () => {
-    await page.locator('a').filter({ hasText: /^Portfolio$/ }).describe('Portfolio nav tab').click();
-    await page.waitForTimeout(1000);
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Portfolio' }).click();
     await expect(page).toHaveURL(/\/portfolios/);
   });
 });
