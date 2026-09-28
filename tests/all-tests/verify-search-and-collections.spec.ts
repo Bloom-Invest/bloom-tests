@@ -21,12 +21,12 @@ import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
  *    instead of using the search input to find stocks.
  */
 test("Verify Search and Collections", async ({ page }) => {
-await test.step("Navigate to the search page.", async () => {
-await page.goto(`/search`, { waitUntil: 'domcontentloaded' });
+await test.step("Navigate to the full collections list.", async () => {
+await page.goto('/ideas/collections', { waitUntil: 'domcontentloaded' });
 await dismissFeedbackModal(page);
 });
 
-await test.step("From the search page, open Low Cost ETFs, return, open Magnificent 7, verify the seven associated companies, and navigate to AAPL stock details.", async () => {
+await test.step("Open Low Cost ETFs, return, open Magnificent 7, verify its seven companies, and navigate to AAPL stock details.", async () => {
 await page.waitForLoadState('domcontentloaded');
 await page.getByRole('link', { name: /Low Cost ETFs/ }).describe('Low Cost ETFs collection card').click();
 // Use browser back navigation — the back button has no accessible name (just an SVG icon)
