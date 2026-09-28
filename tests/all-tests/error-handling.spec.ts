@@ -6,6 +6,7 @@ import { aiAssertSafe } from '../helpers/aiAssertSafe';
  * Verify invalid symbol page shows error, bad routes handled gracefully.
  */
 test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await test.step("Invalid symbol shows error message", async () => {
     await page.goto('/symbol/ZZZZZ', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('domcontentloaded');
@@ -28,11 +29,9 @@ test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
   });
 
   await test.step("App still navigable after error", async () => {
-    const navLink = page.locator('a').filter({ hasText: /^Markets$/ }).describe('Markets nav link');
-    await expect(navLink).toBeVisible({ timeout: 10000 });
-    await navLink.click();
-    await page.waitForTimeout(1000);
-    await expect(page).toHaveURL(/\/markets/);
+    await page.getByRole('banner').getByRole('button').first().click();
+    await expect(page).toHaveURL(/\/onboarding-thread/);
+    await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
   });
 
   await test.step("Non-existent route does not crash the app", async () => {
