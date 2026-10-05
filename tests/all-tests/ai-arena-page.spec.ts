@@ -8,8 +8,9 @@ import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
  * portfolio managers or strategies and verify details are shown.
  */
 test("AI Arena page displays AI portfolio managers and shows details on selection", async ({ page }) => {
+  // Bloom #2859 moved the Arena API under /api/arena/ (with trailing slashes).
   const portfoliosResponse = page.waitForResponse((response) =>
-    new URL(response.url()).pathname === '/api/portfolios' && response.request().method() === 'GET'
+    new URL(response.url()).pathname === '/api/arena/portfolios/' && response.request().method() === 'GET'
   );
   const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   let managers: { id: string; name: string }[];
@@ -48,7 +49,8 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
 
   await test.step("Verify the AI Arena page heading is visible", async () => {
     await dismissFeedbackModal(page);
-    await expect(page.getByRole('heading', { name: 'Copy trade Bloom AI', level: 1 })).toBeVisible();
+    // Bloom #2859 renamed this page header from "Copy trade Bloom AI" to "AI portfolios".
+    await expect(page.getByRole('heading', { name: 'AI portfolios', level: 1 })).toBeVisible();
   });
 
   await test.step("Verify three AI portfolio managers are displayed with performance data", async () => {
@@ -100,7 +102,7 @@ test("AI Arena page displays AI portfolio managers and shows details on selectio
       has: page.getByRole('heading', { name: 'Portfolio Breakdown', exact: true }),
     });
     const positionsResponse = page.waitForResponse((response) =>
-      new URL(response.url()).pathname === `/api/portfolio/${manager.id}/positions`
+      new URL(response.url()).pathname === `/api/arena/portfolio/${manager.id}/positions/`
     );
     await breakdown.getByRole('button', { name: manager.name, exact: true }).click();
     const response = await positionsResponse;

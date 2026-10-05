@@ -42,10 +42,12 @@ test("Markets page displays market data with stock prices and percentage changes
 
   await test.step("Verify the Markets page heading and Market Pulse section are visible", async () => {
     if (new URL(page.url()).pathname === '/search') {
+      // /markets redirects to the Markets view of Search. Bloom #2859 removed the
+      // Ideas/Markets toggle, so prove the Markets view by URL and by the absence
+      // of Ideas-only sections.
       await expect(page).toHaveURL(/\/search\?view=markets/);
       await expect(page.getByRole('heading', { name: 'Search', level: 1 })).toBeVisible();
-      await expect(page.getByRole('group', { name: 'Search views' }).getByRole('button', { name: 'Markets' }))
-        .toHaveAttribute('aria-pressed', 'true');
+      await expect(page.getByRole('heading', { name: 'Latest trades', level: 2 })).toHaveCount(0);
     } else {
       await expect(page.getByRole('heading', { name: 'Markets', level: 1 })).toBeVisible();
     }
