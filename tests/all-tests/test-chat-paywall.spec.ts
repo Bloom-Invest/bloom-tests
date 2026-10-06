@@ -3,6 +3,14 @@ import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 // Daily quota spans new conversations. A completed SSE response decrements it;
 // the final message replaces the composer with the upgrade action.
+// Bloom #2859 moved "+ New" into the chat header's Options menu as "Start a new chat".
+async function startNewChat(page: import('@playwright/test').Page) {
+  await page.getByRole('button', { name: 'Options', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Start a new chat', exact: true }).click();
+  // A fresh thread has no prior user message.
+  await expect(page.getByText('hello', { exact: true })).toHaveCount(0);
+}
+
 async function sendAndConfirm(
   page: import('@playwright/test').Page,
   text: string,
@@ -34,13 +42,13 @@ test("Test chat + paywall", async ({ page }) => {
   });
 
   await test.step("Open new chat and send second message.", async () => {
-    await page.getByRole('button', { name: '+ New' }).click();
+    await startNewChat(page);
     await dismissFeedbackModal(page);
     await sendAndConfirm(page, 'What stocks should I buy?', 1);
   });
 
   await test.step("Open new chat and send third message.", async () => {
-    await page.getByRole('button', { name: '+ New' }).click();
+    await startNewChat(page);
     await dismissFeedbackModal(page);
     await sendAndConfirm(page, 'Summarize the market today', 0);
   });

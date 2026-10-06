@@ -22,17 +22,20 @@ test('Navigate through onboarding flow', async ({ page }) => {
   await expect(page.getByRole('button', { name: /Researched \d+ sources/ })).toBeVisible({ timeout: 60000 });
   await expect(page.getByTestId('turn-4-read-card')).toBeVisible({ timeout: 60000 });
   await dismissFeedbackModal(page);
-  await page.getByRole('button', { name: 'Continue setup' }).click();
+  await page.getByRole('button', { name: 'Show me a story' }).click();
+  await page.getByRole('button', { name: 'Next: alerts' }).click();
 
   await expect(page.getByRole('region', { name: 'Turn 5' })).toContainText('AAPL');
   await page.getByRole('button', { name: 'Not now' }).click();
 
   await dismissFeedbackModal(page);
   await page.getByRole('button', { name: 'Continue with Free' }).click();
+  await page.getByTestId('paywall-exit-survey').getByRole('button', { name: 'Skip and explore' }).click();
 
   await dismissFeedbackModal(page);
   // Free onboarding completes directly into the app.
-  await expect(page.getByRole('link', { name: 'Portfolio' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /^(Search|Ideas)$/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Chat' })).toBeVisible();
+  const nav = page.getByRole('navigation', { name: 'Primary' });
+  for (const name of ['Discover', 'Ask', 'Following', 'Portfolio']) {
+    await expect(nav.getByRole('link', { name, exact: true })).toBeVisible();
+  }
 });
