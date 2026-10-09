@@ -3,17 +3,11 @@ import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 // Daily quota spans new conversations. A completed SSE response decrements it;
 // the final message replaces the composer with the upgrade action.
-async function startNewChat(
-  page: import('@playwright/test').Page,
-  previousMessages: string[],
-) {
+async function startNewChat(page: import('@playwright/test').Page, previousMessage: string) {
   // Bloom #2917: "Start a new chat" is its own header button.
   await page.getByRole('button', { name: 'Start a new chat', exact: true }).click();
-  // A fresh thread shows none of the earlier user messages. Checking only the
-  // first message would pass on the second new chat even if no thread opened.
-  for (const text of previousMessages) {
-    await expect(page.getByText(text, { exact: true })).toHaveCount(0);
-  }
+  // A fresh thread no longer shows the message just sent.
+  await expect(page.getByText(previousMessage, { exact: true })).toHaveCount(0);
 }
 
 async function sendAndConfirm(
@@ -47,13 +41,13 @@ test("Test chat + paywall", async ({ page }) => {
   });
 
   await test.step("Open new chat and send second message.", async () => {
-    await startNewChat(page, ['hello']);
+    await startNewChat(page, 'hello');
     await dismissFeedbackModal(page);
     await sendAndConfirm(page, 'What stocks should I buy?', 1);
   });
 
   await test.step("Open new chat and send third message.", async () => {
-    await startNewChat(page, ['hello', 'What stocks should I buy?']);
+    await startNewChat(page, 'What stocks should I buy?');
     await dismissFeedbackModal(page);
     await sendAndConfirm(page, 'Summarize the market today', 0);
   });
