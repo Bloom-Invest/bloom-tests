@@ -37,9 +37,9 @@ test("Bottom navigation routes to correct pages", async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Following', level: 1 })).toBeVisible();
   });
 
-  await test.step("Open Settings from the tab Options menu and verify navigation", async () => {
-    await page.getByRole('button', { name: 'Options', exact: true }).click();
-    await page.getByRole('menuitem', { name: 'Settings', exact: true }).click();
+  // Bloom #2917: a tab with no extra actions shows a Settings gear, not an Options menu.
+  await test.step("Open Settings from the tab header and verify navigation", async () => {
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(page).toHaveURL(/\/more/);
     // Settings is a pushed page without the nav bar; Back returns to the tab.
     await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);

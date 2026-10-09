@@ -3,10 +3,9 @@ import { dismissFeedbackModal } from '../helpers/dismissFeedbackModal';
 
 // Daily quota spans new conversations. A completed SSE response decrements it;
 // the final message replaces the composer with the upgrade action.
-// Bloom #2859 moved "+ New" into the chat header's Options menu as "Start a new chat".
 async function startNewChat(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: 'Options', exact: true }).click();
-  await page.getByRole('menuitem', { name: 'Start a new chat', exact: true }).click();
+  // Bloom #2917: "Start a new chat" is its own header button.
+  await page.getByRole('button', { name: 'Start a new chat', exact: true }).click();
   // A fresh thread has no prior user message.
   await expect(page.getByText('hello', { exact: true })).toHaveCount(0);
 }
