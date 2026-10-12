@@ -40,17 +40,12 @@ test("Markets page displays market data with stock prices and percentage changes
     }
   });
 
-  await test.step("Verify the Markets page heading and Market Pulse section are visible", async () => {
-    if (new URL(page.url()).pathname === '/search') {
-      // /markets redirects to the Markets view of Search. Bloom #2859 removed the
-      // Ideas/Markets toggle, so prove the Markets view by URL and by the absence
-      // of Ideas-only sections.
-      await expect(page).toHaveURL(/\/search\?view=markets/);
-      await expect(page.getByRole('heading', { name: 'Search', level: 1 })).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Latest trades', level: 2 })).toHaveCount(0);
-    } else {
-      await expect(page.getByRole('heading', { name: 'Markets', level: 1 })).toBeVisible();
-    }
+  await test.step("Verify Markets is selected within Discover", async () => {
+    await expect(page).toHaveURL(/\/markets$/);
+    await expect(page.getByRole('heading', { name: 'Discover', level: 1 })).toBeVisible();
+    const views = page.getByRole('navigation', { name: 'Discover views' });
+    await expect(views.getByRole('link', { name: 'Markets', exact: true }))
+      .toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('heading', { name: 'Market Pulse', level: 2 })).toBeVisible();
   });
 
@@ -71,37 +66,26 @@ test("Markets page displays market data with stock prices and percentage changes
     //   1. On a trading day: stock entries with percentage changes like "+65.3%" / "-17.6%"
     //   2. Outside market hours / on weekends: a "No movers for this period" placeholder
     // Either is a valid render of the section, so accept both.
-    const movers = page.getByText(/[+-]\d+\.\d+%/).first();
-    const noData = page.getByText(/No movers for this period/i);
+    const marketMap = page.locator('[data-search-widget="market_map"]');
+    const movers = marketMap.getByText(/[+-]\d+\.\d+%/).first();
+    const noData = marketMap.getByText(/No movers for this period/i);
     await expect(movers.or(noData)).toBeVisible();
   });
 
-  await test.step("Verify Market News on the legacy Markets page", async () => {
-    if (new URL(page.url()).pathname === '/search') return;
-    // Scroll to reveal the Market News section
-    const marketNewsHeading = page.getByRole('heading', { name: 'Market News', level: 2 });
-    await marketNewsHeading.scrollIntoViewIfNeeded();
-    await expect(marketNewsHeading).toBeVisible();
-
-    // Verify the "All News" link is present
-    await expect(page.getByRole('link', { name: /All News/ })).toBeVisible();
-
-    // Verify at least one news article is displayed.
-    // Each article button ends with a relative timestamp. formatRelativeTime in
-    // frontend/src/components/MarketNewsList/index.tsx emits the full ladder:
-    // "just now", "5m ago", "3h ago", "yesterday", "2d ago", "3w ago", "2mo ago".
-    // Matching only [hd] made this step fail whenever every headline was under an
-    // hour old, which is the normal state on a weekday morning. Match the ladder.
-    const firstNewsArticle = page
-      .getByRole('button', { name: /\d+(m|h|d|w|mo) ago|just now|yesterday/i })
-      .first();
-    await firstNewsArticle.scrollIntoViewIfNeeded();
-    await expect(firstNewsArticle).toBeVisible();
+  await test.step("Verify the earnings calendar and its full-page link", async () => {
+    const earnings = page.locator('[data-search-widget="earnings"]');
+    await earnings.scrollIntoViewIfNeeded();
+    await expect(earnings.getByRole('heading', { name: /earnings$/i, level: 2 })).toBeVisible();
+    await expect(earnings.getByRole('link', { name: /All Earnings/ })).toHaveAttribute('href', '/markets/earnings');
+    const days = earnings.getByRole('button', { name: /Earnings .* compan(?:y|ies) reporting/ });
+    const noEarnings = earnings.getByText('No upcoming earnings for your holdings in the next 4 weeks.', { exact: true });
+    await expect(days.first().or(noEarnings)).toBeVisible();
+    if (!(await noEarnings.isVisible())) await expect(days).toHaveCount(7);
   });
 
   await test.step("Verify time period controls are available for the Top Movers chart", async () => {
     // Scroll back up to the time period controls
-    const timePeriodGroup = page.getByRole('radiogroup');
+    const timePeriodGroup = page.locator('[data-search-widget="market_map"]').getByRole('radiogroup');
     await timePeriodGroup.scrollIntoViewIfNeeded();
     await expect(timePeriodGroup).toBeVisible();
 
@@ -109,5 +93,20 @@ test("Markets page displays market data with stock prices and percentage changes
     await expect(timePeriodGroup.getByText('1D')).toBeVisible();
     await expect(timePeriodGroup.getByText('1W')).toBeVisible();
     await expect(timePeriodGroup.getByText('1M')).toBeVisible();
+  });
+
+  await test.step("Search returns to the selected Markets tab", async () => {
+    const search = page.getByRole('button', { name: 'Search stocks, ETFs, and news', exact: true });
+    await search.scrollIntoViewIfNeeded();
+    await search.click();
+    await expect(page).toHaveURL(/\/search$/);
+    await dismissFeedbackModal(page);
+    await expect(page.getByRole('textbox', { name: 'Search stocks, ETFs, and news', exact: true })).toBeVisible();
+    await page.goBack();
+    await dismissFeedbackModal(page);
+    await expect(page).toHaveURL(/\/markets$/);
+    await expect(page.getByRole('navigation', { name: 'Discover views' })
+      .getByRole('link', { name: 'Markets', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('heading', { name: 'Market Pulse', level: 2 })).toBeVisible();
   });
 });
