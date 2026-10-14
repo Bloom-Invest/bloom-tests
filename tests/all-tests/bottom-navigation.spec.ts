@@ -18,15 +18,15 @@ test("Bottom navigation routes to correct pages", async ({ page }) => {
     }
   });
 
-  // Bloom #2859: the primary nav is Discover / Ask / Following / Portfolio, and
+  // Bloom #2859/#3074: the primary nav is Discover / Chat / Following / Portfolio, and
   // Settings moved from the nav into each tab header's Options menu.
   await test.step("Tap Discover tab and verify navigation", async () => {
     await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Discover', exact: true }).click();
     await expect(page).toHaveURL(/\/feed(?:\?|$)/);
   });
 
-  await test.step("Tap Ask tab and verify navigation", async () => {
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Ask', exact: true }).click();
+  await test.step("Tap Chat tab and verify navigation", async () => {
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Chat', exact: true }).click();
     await expect(page).toHaveURL(/\/chat/);
     await expect(page.getByRole('textbox').describe('Chat input')).toBeVisible({ timeout: 10000 });
   });
