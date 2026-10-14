@@ -35,7 +35,7 @@ test('Navigate through onboarding flow', async ({ page }) => {
   await dismissFeedbackModal(page);
   // Free onboarding completes directly into the app.
   const nav = page.getByRole('navigation', { name: 'Primary' });
-  for (const name of ['Discover', 'Ask', 'Following', 'Portfolio']) {
+  for (const name of ['Discover', 'Chat', 'Portfolio']) {
     await expect(nav.getByRole('link', { name, exact: true })).toBeVisible();
   }
 });

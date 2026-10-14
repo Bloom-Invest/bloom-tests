@@ -61,13 +61,14 @@ await page.getByRole('button', { name: 'Create Portfolio' }).describe('Create po
 await test.step("Assert portfolio was created successfully with graphs and stock holdings.", async () => {
 await dismissFeedbackModal(page);
 await expect(page.getByRole('heading', { name: 'Magnificent 7' })).toBeVisible();
-await expect(page.getByRole('heading', { name: 'Holdings' })).toBeVisible();
+await expect(page.getByRole('heading', { name: 'Stocks' })).toBeVisible();
 await expect(page.getByRole('link', { name: /AAPL/ })).toBeVisible();
 await expect(page.getByRole('link', { name: /MSFT/ })).toBeVisible();
 });
 
 await test.step("Open the 'Change columns' modal, configure columns, and verify sortable headers.", async () => {
-await page.getByRole('button', { name: 'Change columns' }).describe('Change columns button').click();
+await page.getByRole('button', { name: 'Options' }).click();
+await page.getByRole('menuitem', { name: 'Change columns' }).click();
 await page.getByRole('group', { name: 'Left' }).getByRole('combobox').selectOption('symbol');
 await page.getByRole('group', { name: 'Middle' }).getByRole('combobox').selectOption('marketCap');
 await page.locator('form').getByText('3M', { exact: true }).click();
@@ -89,7 +90,9 @@ await page.getByRole('menuitem', { name: 'Edit portfolio' }).click();
 await dismissFeedbackModal(page);
 await page.locator('#allocation-0').fill('20');
 await page.getByRole('button', { name: 'Save Changes' }).click();
-await expect(page.getByRole('heading', { name: 'Magnificent 7' })).toBeVisible();
+// Bloom #3077: on /portfolios the title is a "Select portfolio" picker, so the
+// heading's accessible name is the picker label; match its visible text instead.
+await expect(page.getByRole('heading', { level: 1 })).toContainText('Magnificent 7');
 await page.getByText('YTD').click();
 });
 
@@ -97,7 +100,7 @@ await test.step("Verify Delete and undo", async () => {
 await page.getByRole('button', { name: 'Options' }).click();
 await page.getByRole('menuitem', { name: 'Delete portfolio' }).click();
 await page.getByRole('button', { name: 'Undo' }).click();
-await expect(page.getByRole('heading', { name: 'Magnificent 7' })).toBeVisible();
+await expect(page.getByRole('heading', { level: 1 })).toContainText('Magnificent 7');
 });
 
 await test.step("Click 'Options', then 'Delete portfolio'. Verify empty portfolio state.", async () => {
