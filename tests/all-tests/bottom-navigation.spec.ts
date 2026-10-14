@@ -18,10 +18,20 @@ test("Bottom navigation routes to correct pages", async ({ page }) => {
     }
   });
 
-  // Bloom #2859/#3074: the primary nav is Discover / Chat / Following / Portfolio, and
-  // Settings moved from the nav into each tab header's Options menu.
+  // Bloom #3074/#3080: the primary nav is Portfolio / Discover / Chat, and
+  // Settings moved from the nav into each tab header.
   await test.step("Tap Discover tab and verify navigation", async () => {
     await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Discover', exact: true }).click();
+    await expect(page).toHaveURL(/\/feed(?:\?|$)/);
+  });
+
+  // Bloom #2917/#3063: Discover's header shows a Settings gear next to Refresh.
+  await test.step("Open Settings from the tab header and verify navigation", async () => {
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+    await expect(page).toHaveURL(/\/more/);
+    // Settings is a pushed page without the nav bar; Back returns to the tab.
+    await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page).toHaveURL(/\/feed(?:\?|$)/);
   });
 
@@ -29,22 +39,6 @@ test("Bottom navigation routes to correct pages", async ({ page }) => {
     await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Chat', exact: true }).click();
     await expect(page).toHaveURL(/\/chat/);
     await expect(page.getByRole('textbox').describe('Chat input')).toBeVisible({ timeout: 10000 });
-  });
-
-  await test.step("Tap Following tab and verify navigation", async () => {
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Following', exact: true }).click();
-    await expect(page).toHaveURL(/\/following(?:\?|$)/);
-    await expect(page.getByRole('heading', { name: 'Following', level: 1 })).toBeVisible();
-  });
-
-  // Bloom #2917: a tab with no extra actions shows a Settings gear, not an Options menu.
-  await test.step("Open Settings from the tab header and verify navigation", async () => {
-    await page.getByRole('button', { name: 'Settings', exact: true }).click();
-    await expect(page).toHaveURL(/\/more/);
-    // Settings is a pushed page without the nav bar; Back returns to the tab.
-    await expect(page.getByRole('navigation', { name: 'Primary' })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Back', exact: true }).click();
-    await expect(page).toHaveURL(/\/following(?:\?|$)/);
   });
 
   await test.step("Tap Portfolio tab and verify navigation back", async () => {

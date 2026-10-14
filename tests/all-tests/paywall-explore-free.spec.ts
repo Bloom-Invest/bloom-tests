@@ -22,7 +22,7 @@ test('Free onboarding grants access to content', async ({ page }) => {
 
   await dismissFeedbackModal(page);
   const nav = page.getByRole('navigation', { name: 'Primary' });
-  for (const name of ['Discover', 'Chat', 'Following', 'Portfolio']) {
+  for (const name of ['Discover', 'Chat', 'Portfolio']) {
     await expect(nav.getByRole('link', { name, exact: true })).toBeVisible();
   }
 });
