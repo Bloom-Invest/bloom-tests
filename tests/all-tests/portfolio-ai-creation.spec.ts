@@ -21,7 +21,7 @@ test("Portfolio creation with AI-generated holdings", async ({ page }) => {
   });
 
   await test.step("Start portfolio creation", async () => {
-    const createBtn = page.getByRole('button', { name: /^Build a portfolio/ });
+    const createBtn = page.getByRole('button', { name: 'Create your first portfolio' });
     await expect(createBtn).toBeVisible({ timeout: 10000 });
     await createBtn.click();
     await page.waitForTimeout(1000);
