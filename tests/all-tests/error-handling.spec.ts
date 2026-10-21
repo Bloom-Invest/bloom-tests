@@ -31,7 +31,7 @@ test("Invalid routes and symbols are handled gracefully", async ({ page }) => {
   await test.step("App still navigable after error", async () => {
     await page.getByRole('banner').getByRole('button').first().click();
     await expect(page).toHaveURL(/\/onboarding-thread/);
-    await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^(Get started|Personalize Bloom)$/ })).toBeVisible();
   });
 
   await test.step("Non-existent route does not crash the app", async () => {

@@ -6,7 +6,7 @@ test.use({ permissions: ['notifications'] });
 test('Free onboarding grants access to content', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await dismissFeedbackModal(page);
-  await page.getByRole('button', { name: 'Get started' }).click();
+  await page.getByRole('button', { name: /^(Get started|Personalize Bloom)$/ }).click();
   await page.getByTestId('experience-option-casual').click();
   await page.getByTestId('stock-row-AAPL').click();
   await page.getByRole('button', { name: /^Show me / }).click();

@@ -7,9 +7,9 @@ test('Navigate through onboarding flow', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await dismissFeedbackModal(page);
   await expect(page).toHaveTitle(/Bloom/i);
-  await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^(Get started|Personalize Bloom)$/ })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Get started' }).click();
+  await page.getByRole('button', { name: /^(Get started|Personalize Bloom)$/ }).click();
   await expect(page.getByTestId('onboarding-experience-intro')).toBeVisible();
   await page.getByTestId('experience-option-casual').click();
 
