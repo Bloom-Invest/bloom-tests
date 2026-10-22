@@ -61,14 +61,14 @@ await page.getByRole('button', { name: 'Create Portfolio' }).describe('Create po
 await test.step("Assert portfolio was created successfully with graphs and stock holdings.", async () => {
 await dismissFeedbackModal(page);
 await expect(page.getByRole('heading', { name: 'Magnificent 7' })).toBeVisible();
-await expect(page.getByRole('heading', { name: 'Stocks' })).toBeVisible();
+await expect(page.getByRole('heading', { name: 'Holdings' })).toBeVisible();
 await expect(page.getByRole('link', { name: /AAPL/ })).toBeVisible();
 await expect(page.getByRole('link', { name: /MSFT/ })).toBeVisible();
 });
 
 await test.step("Open the 'Change columns' modal, configure columns, and verify sortable headers.", async () => {
-await page.getByRole('button', { name: 'Options' }).click();
-await page.getByRole('menuitem', { name: 'Change columns' }).click();
+// Bloom #3237 moved Change columns out of the Options menu, next to Holdings.
+await page.getByRole('button', { name: 'Change columns' }).click();
 await page.getByRole('group', { name: 'Left' }).getByRole('combobox').selectOption('symbol');
 await page.getByRole('group', { name: 'Middle' }).getByRole('combobox').selectOption('marketCap');
 await page.locator('form').getByText('3M', { exact: true }).click();

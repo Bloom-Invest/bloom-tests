@@ -18,14 +18,14 @@ test("Bottom navigation routes to correct pages", async ({ page }) => {
     }
   });
 
-  // Bloom #3074/#3080: the primary nav is Portfolio / Discover / Chat, and
+  // Bloom #3074/#3080/#3235: the primary nav is Portfolio / Markets / Chat, and
   // Settings moved from the nav into each tab header.
-  await test.step("Tap Discover tab and verify navigation", async () => {
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Discover', exact: true }).click();
+  await test.step("Tap Markets tab and verify navigation", async () => {
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Markets', exact: true }).click();
     await expect(page).toHaveURL(/\/feed(?:\?|$)/);
   });
 
-  // Bloom #2917/#3063: Discover's header shows a Settings gear next to Refresh.
+  // Bloom #2917/#3063: Markets' header shows a Settings gear next to Refresh.
   await test.step("Open Settings from the tab header and verify navigation", async () => {
     await page.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(page).toHaveURL(/\/more/);
