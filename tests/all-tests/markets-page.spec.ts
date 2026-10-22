@@ -40,11 +40,11 @@ test("Markets page displays market data with stock prices and percentage changes
     }
   });
 
-  await test.step("Verify Markets is selected within Discover", async () => {
+  await test.step("Verify Trends is selected within Markets", async () => {
     await expect(page).toHaveURL(/\/markets$/);
-    await expect(page.getByRole('heading', { name: 'Discover', level: 1 })).toBeVisible();
-    const views = page.getByRole('navigation', { name: 'Discover views' });
-    await expect(views.getByRole('link', { name: 'Markets', exact: true }))
+    await expect(page.getByRole('heading', { name: 'Markets', level: 1 })).toBeVisible();
+    const views = page.getByRole('navigation', { name: 'Markets views' });
+    await expect(views.getByRole('link', { name: 'Trends', exact: true }))
       .toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('heading', { name: 'Market Pulse', level: 2 })).toBeVisible();
   });
@@ -95,7 +95,7 @@ test("Markets page displays market data with stock prices and percentage changes
     await expect(timePeriodGroup.getByText('1M')).toBeVisible();
   });
 
-  await test.step("Search returns to the selected Markets tab", async () => {
+  await test.step("Search returns to the selected Trends tab", async () => {
     const search = page.getByRole('button', { name: 'Search stocks, ETFs, and news', exact: true });
     await search.scrollIntoViewIfNeeded();
     await search.click();
@@ -105,8 +105,8 @@ test("Markets page displays market data with stock prices and percentage changes
     await page.goBack();
     await dismissFeedbackModal(page);
     await expect(page).toHaveURL(/\/markets$/);
-    await expect(page.getByRole('navigation', { name: 'Discover views' })
-      .getByRole('link', { name: 'Markets', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('navigation', { name: 'Markets views' })
+      .getByRole('link', { name: 'Trends', exact: true })).toHaveAttribute('aria-current', 'page');
     await expect(page.getByRole('heading', { name: 'Market Pulse', level: 2 })).toBeVisible();
   });
 });
