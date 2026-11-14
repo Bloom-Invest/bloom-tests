@@ -59,4 +59,4 @@ Every AI call costs money and adds latency.
 
 ## CI
 
-`OPENROUTER_API_KEY` must be set as a repo secret for CI runs. No local proxy dependency.
+CI reads the `QA_OPENROUTER_API_KEY` repo secret into `OPENROUTER_API_KEY`. No local proxy dependency.
