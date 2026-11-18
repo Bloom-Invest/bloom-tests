@@ -37,7 +37,7 @@ It tries two providers in order:
 1. **Bloom proxy**, only when `QA_PROXY_API_KEY` is set. Calls `QA_PROXY_BASE_URL`
    (default `https://proxy.getbloom.app/v1`) `/responses` with `stream: true, store: false`.
 2. **OpenRouter** chat/completions with `OPENROUTER_API_KEY` (CI fills it from the
-   `QA_OPENROUTER_API_KEY` secret).
+   `OPENROUTER_API_KEY` secret).
 
 Fallback rules: the proxy falls back to OpenRouter on a network error/timeout or HTTP
 401, 402, 403, 408, 429 or 5xx. Any other 4xx fails the call. Without `QA_PROXY_API_KEY`
@@ -86,5 +86,5 @@ Every AI call costs money and adds latency.
 
 ## CI
 
-CI reads the `QA_PROXY_API_KEY` secret (Bloom proxy, tried first) and the `QA_OPENROUTER_API_KEY`
-secret (into `OPENROUTER_API_KEY`, the fallback). Until `QA_PROXY_API_KEY` is added, CI uses OpenRouter only.
+CI reads the `QA_PROXY_API_KEY` secret (Bloom proxy, tried first) and the `OPENROUTER_API_KEY`
+secret (the fallback).
