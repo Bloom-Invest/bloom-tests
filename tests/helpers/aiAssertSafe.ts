@@ -3,8 +3,8 @@ import { aiAssert } from './aiAssert';
 
 /**
  * Backwards-compatible shim. Historically wrapped Stably's `aiAssert` with an
- * infra-error fallback. Now delegates to the in-house `aiAssert` (OpenRouter
- * vision). Kept so existing callers don't have to change.
+ * infra-error fallback. Now delegates to the in-house `aiAssert` (Bloom proxy,
+ * then OpenRouter). Kept so existing callers don't have to change.
  *
  * The `fallback` predicate is still honoured: if the vision call itself fails
  * for transport reasons after retries, and a structural fallback was provided,

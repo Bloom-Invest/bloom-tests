@@ -42,14 +42,14 @@ Operate with a skeptical, evidence-driven mindset. Verify every claim against th
 **End every review with one line:** `N P0, M P1, K P2, J P3 — top issue: <one sentence>`. Zero P0/P1/P2 → "No blocking issues."
 <!-- CODEX-ONLY:END -->
 
-E2E test suite for the [Bloom](https://bloom.onrender.com) investing app using Playwright with in-house vision assertions (OpenRouter Grok). Visual checks go through `tests/helpers/grokAssert.ts` (model `x-ai/grok-4.5`); it screenshots the page and returns a `{pass,reason}` verdict. `aiAssertSafe()` delegates to it.
+E2E test suite for the [Bloom](https://bloom.onrender.com) investing app using Playwright with in-house vision assertions (`openai/gpt-6-luna` via the Bloom proxy, falling back to OpenRouter). Visual checks go through `tests/helpers/aiAssert.ts`; it screenshots the page and returns a `{pass,reason}` verdict. `aiAssertSafe()` delegates to it.
 
 ## Quick Start
 
 ```bash
 npm install
 npx playwright install chromium
-export OPENROUTER_API_KEY=...   # required for grokAssert (vision assertions)
+export OPENROUTER_API_KEY=...   # or QA_PROXY_API_KEY; see "Vision checks and AI keys"
 
 # Run all tests
 BASE_URL=https://bloom.onrender.com npx playwright test --project all-tests
@@ -67,8 +67,8 @@ npx playwright show-report
 tests/
   all-tests/          ← 26 spec files, one per feature area
   helpers/
-    aiAssertSafe.ts   ← Delegates to grokAssert (kept for back-compat)
-    grokAssert.ts     ← Screenshot -> OpenRouter Grok -> {pass,reason} verdict
+    aiAssertSafe.ts   ← Delegates to aiAssert (kept for back-compat)
+    aiAssert.ts       ← Screenshot -> gpt-6-luna (proxy, then OpenRouter) -> {pass,reason} verdict
     dismissFeedbackModal.ts ← Dismisses Bloom feedback modals (see pitfalls)
   knowledge.md        ← 178 items of app behavior learned from test runs
 playwright.config.ts  ← Two projects: "chromium" (excludes all-tests) and "all-tests"
@@ -79,9 +79,38 @@ playwright.global-setup.ts ← Warms Render cold-start before tests run
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OPENROUTER_API_KEY` | Yes | OpenRouter key for `grokAssert` vision calls |
-| `GROK_VISION_MODEL` | No | Vision model override (default `x-ai/grok-4.5`) |
+| `QA_PROXY_API_KEY` | One of these two | Bloom proxy key; when set, vision calls try the proxy first |
+| `QA_PROXY_BASE_URL` | No | Proxy base URL (default `https://proxy.getbloom.app/v1`) |
+| `OPENROUTER_API_KEY` | One of these two | OpenRouter key; fallback (or only provider without a proxy key) |
+| `VISION_MODEL` | No | Vision model override (default `openai/gpt-6-luna`; legacy `GROK_VISION_MODEL` also works) |
 | `BASE_URL` | No | App URL (default: `https://bloom.onrender.com`) |
+
+## Vision checks and AI keys
+
+`aiAssert()` (`tests/helpers/aiAssert.ts`) screenshots the page and asks `openai/gpt-6-luna`
+for a `{ pass, reason }` verdict. Override the model with `VISION_MODEL`.
+
+It tries two providers in order:
+
+1. **Bloom proxy**, only when `QA_PROXY_API_KEY` is set. Calls `QA_PROXY_BASE_URL`
+   (default `https://proxy.getbloom.app/v1`) `/responses` with `stream: true, store: false`.
+2. **OpenRouter** chat/completions with `OPENROUTER_API_KEY` (CI fills it from the
+   `OPENROUTER_API_KEY` secret).
+
+Fallback rules: the proxy falls back to OpenRouter on a network error/timeout or HTTP
+401, 402, 403, 408, 429 or 5xx. Any other 4xx fails the call. Without `QA_PROXY_API_KEY`
+only OpenRouter is used. At least one of the two keys must be set.
+
+If every provider tried fails: 5xx/429/network errors are retried, then `aiAssertSafe()`
+soft-passes them. 401/402/403 (dead key or no credits) **soft-pass** the assertion: the test
+stays green but the report gets an `aiAssert-vision-unavailable` annotation. If every visual
+check suddenly "passes" with `HTTP 402 ... Insufficient credits` in that annotation, the
+OpenRouter key is out of money: top it up or set `QA_PROXY_API_KEY`. A real `pass:false`
+verdict always fails the test.
+
+Running locally: on Eric's Mac the proxy runs at `http://127.0.0.1:18802/v1` and needs no
+real key, so `QA_PROXY_BASE_URL=http://127.0.0.1:18802/v1 QA_PROXY_API_KEY=local`.
+Anywhere else, `export OPENROUTER_API_KEY=...`.
 
 ## Bloom UI Pitfalls
 
@@ -141,7 +170,7 @@ Live search in headless runs can return unexpected results or hang. Prefer navig
 ### 9. Inspecting Failures
 
 Runs produce a standard Playwright HTML report (`npx playwright show-report`) plus screenshots
-under `test-results/` on failure. A `grokAssert` failure prints the model's `reason` in the error.
+under `test-results/` on failure. A `aiAssert` failure prints the model's `reason` in the error.
 
 ### 10. Chronic Timeout Tests
 
@@ -164,4 +193,4 @@ Before assuming a test is broken, check if the app itself was degraded:
 - Use ticker symbols in selectors, not company names
 - Use `scrollIntoViewIfNeeded()` before clicking below-fold elements
 - Add `afterAll` cleanup for any state-mutating tests (bookmarks, portfolios)
-- Prefer explicit Playwright selectors over `grokAssert` when a deterministic check exists (cheaper, faster)
+- Prefer explicit Playwright selectors over `aiAssert` when a deterministic check exists (cheaper, faster)
