@@ -3,9 +3,8 @@ import { aiAssert } from '../helpers/aiAssert';
 
 /**
  * User Prompt:
- * Navigate to the Ideas Picks page (/ideas/picks). Verify the page loads and shows
- * trade ideas, stock picks, or investment recommendations. Assert that at least one
- * pick or trade idea is visible with a stock ticker.
+ * Navigate to the Ideas Picks page (/ideas/picks), now the Arena tab. Verify the
+ * AI models' recent trades load and at least one trade shows a stock ticker.
  */
 test("Ideas Picks page displays trade ideas with stock tickers", async ({ page }) => {
   await test.step("Navigate to the Ideas Picks page and dismiss any overlays", async () => {
@@ -21,14 +20,18 @@ test("Ideas Picks page displays trade ideas with stock tickers", async ({ page }
     }
   });
 
-  await test.step("Verify the Ideas Picks page loads with trade ideas and stock tickers", async () => {
-    // Wait for the page to fully load
-    await page.waitForLoadState('domcontentloaded');
+  await test.step("Verify the Recent trades list shows trades with stock tickers", async () => {
+    // The Arena tab leads with model returns and a performance chart; the trades
+    // sit below them, so scope the check to the Recent trades section.
+    const recentTrades = page
+      .locator('section')
+      .filter({ has: page.getByRole('heading', { name: 'Recent trades' }) });
+    const firstTrade = recentTrades.getByRole('button', { name: /^View .+ details$/ }).first();
+    await expect(firstTrade).toBeVisible({ timeout: 30000 });
+    await firstTrade.scrollIntoViewIfNeeded();
 
-    // Use aiAssert to verify the page shows trade ideas, stock picks, or investment content
-    // with at least one stock ticker visible
-    await aiAssert(page, 
-      'The page shows trade ideas, stock picks, or investment recommendations. At least one stock ticker symbol is visible on the page. The page is not showing an error or blank screen.',
+    await aiAssert(page,
+      'A "Recent trades" list is visible where at least one row shows a stock ticker symbol with a BUY or SELL label. No error message is shown.',
       { timeout: 60000 }
     );
   });
